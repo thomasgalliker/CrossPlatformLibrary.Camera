@@ -197,7 +197,6 @@ namespace CrossPlatformLibrary.Camera
             else if (options.DefaultCamera == CameraFacingDirection.Rear && backCamera != null)
             {
                 captureSettings.VideoDeviceId = backCamera.Id;
-                ;
             }
             await this.MyMediaCapture.InitializeAsync(captureSettings);
 

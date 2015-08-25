@@ -1,20 +1,4 @@
-﻿//
-//  Copyright 2011-2013, Xamarin Inc.
-//
-//    Licensed under the Apache License, Version 2.0 (the "License");
-//    you may not use this file except in compliance with the License.
-//    You may obtain a copy of the License at
-//
-//        http://www.apache.org/licenses/LICENSE-2.0
-//
-//    Unless required by applicable law or agreed to in writing, software
-//    distributed under the License is distributed on an "AS IS" BASIS,
-//    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-//    See the License for the specific language governing permissions and
-//    limitations under the License.
-//
-
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.IO.IsolatedStorage;
@@ -30,12 +14,12 @@ namespace CrossPlatformLibrary.Camera
     {
         private static readonly IEnumerable<string> SupportedVideoFileTypes = new List<string> { ".mp4", ".wmv", ".avi" };
         private static readonly IEnumerable<string> SupportedImageFileTypes = new List<string> { ".jpeg", ".jpg", ".png", ".gif", ".bmp" };
+
         /// <summary>
-        /// Implementation
+        ///     Implementation
         /// </summary>
         public Media()
         {
-
             this.photoChooser.Completed += this.OnPhotoChosen;
             this.photoChooser.ShowCamera = false;
 
@@ -50,43 +34,57 @@ namespace CrossPlatformLibrary.Camera
                 Console.WriteLine("You must set the ID_CAP_ISV_CAMERA permission.");
             }
         }
-        /// <inheritdoc/>
-        public bool IsCameraAvailable
-        {
-            get;
-            private set;
-        }
-        /// <inheritdoc/>
+
+        /// <inheritdoc />
+        public bool IsCameraAvailable { get; private set; }
+
+        /// <inheritdoc />
         public bool IsTakePhotoSupported
         {
-            get { return true; }
+            get
+            {
+                return true;
+            }
         }
-        /// <inheritdoc/>
+
+        /// <inheritdoc />
         public bool IsPickPhotoSupported
         {
-            get { return true; }
+            get
+            {
+                return true;
+            }
         }
-        /// <inheritdoc/>
+
+        /// <inheritdoc />
         public bool IsTakeVideoSupported
         {
-            get { return false; }
+            get
+            {
+                return false;
+            }
         }
-        /// <inheritdoc/>
+
+        /// <inheritdoc />
         public bool IsPickVideoSupported
         {
-            get { return false; }
+            get
+            {
+                return false;
+            }
         }
 
         /// <summary>
-        /// Picks a photo from the default gallery
+        ///     Picks a photo from the default gallery
         /// </summary>
         /// <returns>Media file or null if canceled</returns>
         public Task<MediaFile> PickPhotoAsync()
         {
-
             var ntcs = new TaskCompletionSource<MediaFile>();
             if (Interlocked.CompareExchange(ref completionSource, ntcs, null) != null)
+            {
                 throw new InvalidOperationException("Only one operation can be active at at time");
+            }
 
             this.photoChooser.Show();
 
@@ -94,20 +92,24 @@ namespace CrossPlatformLibrary.Camera
         }
 
         /// <summary>
-        /// Take a photo async with specified options
+        ///     Take a photo async with specified options
         /// </summary>
         /// <param name="options">Camera Media Options</param>
         /// <returns>Media file of photo or null if canceled</returns>
         public Task<MediaFile> TakePhotoAsync(StoreCameraMediaOptions options)
         {
             if (!this.IsCameraAvailable)
+            {
                 throw new NotSupportedException();
+            }
 
             options.VerifyOptions();
 
             var ntcs = new TaskCompletionSource<MediaFile>(options);
             if (Interlocked.CompareExchange(ref completionSource, ntcs, null) != null)
+            {
                 throw new InvalidOperationException("Only one operation can be active at a time");
+            }
 
             this.cameraCapture.Show();
 
@@ -115,7 +117,7 @@ namespace CrossPlatformLibrary.Camera
         }
 
         /// <summary>
-        /// Picks a video from the default gallery
+        ///     Picks a video from the default gallery
         /// </summary>
         /// <returns>Media file of video or null if canceled</returns>
         public async Task<MediaFile> PickVideoAsync()
@@ -140,7 +142,7 @@ namespace CrossPlatformLibrary.Camera
         }
 
         /// <summary>
-        /// Take a video with specified options
+        ///     Take a video with specified options
         /// </summary>
         /// <param name="options">Video Media Options</param>
         /// <returns>Media file of new video or null if canceled</returns>
@@ -152,7 +154,6 @@ namespace CrossPlatformLibrary.Camera
         private readonly CameraCaptureTask cameraCapture = new CameraCaptureTask();
         private readonly PhotoChooserTask photoChooser = new PhotoChooserTask();
         private static TaskCompletionSource<MediaFile> completionSource;
-
 
         private void OnPhotoChosen(object sender, PhotoResult photoResult)
         {
@@ -174,14 +175,18 @@ namespace CrossPlatformLibrary.Camera
 
                 string dir = Path.GetDirectoryName(path);
                 if (!String.IsNullOrWhiteSpace(dir))
+                {
                     store.CreateDirectory(dir);
+                }
 
                 using (var fs = store.CreateFile(path))
                 {
                     byte[] buffer = new byte[20480];
                     int len;
                     while ((len = photoResult.ChosenPhoto.Read(buffer, 0, buffer.Length)) > 0)
+                    {
                         fs.Write(buffer, 0, len);
+                    }
 
                     fs.Flush(flushToDisk: true);
                 }
@@ -190,11 +195,7 @@ namespace CrossPlatformLibrary.Camera
             Action<bool> dispose = null;
             if (options == null)
             {
-                dispose = d =>
-                {
-                    using (var store = IsolatedStorageFile.GetUserStoreForApplication())
-                        store.DeleteFile(path);
-                };
+                dispose = d => { using (var store = IsolatedStorageFile.GetUserStoreForApplication()) store.DeleteFile(path); };
             }
 
             switch (photoResult.TaskResult)
@@ -207,7 +208,9 @@ namespace CrossPlatformLibrary.Camera
                 case TaskResult.None:
                     photoResult.ChosenPhoto.Dispose();
                     if (photoResult.Error != null)
+                    {
                         tcs.SetResult(null);
+                    }
 
                     break;
             }

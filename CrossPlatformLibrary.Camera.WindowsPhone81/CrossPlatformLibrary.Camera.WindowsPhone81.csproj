@@ -80,6 +80,18 @@
     <Prefer32Bit>true</Prefer32Bit>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="..\CrossPlatformLibrary.Camera.WindowsStore\DeviceInformationExtensions.cs">
+      <Link>DeviceInformationExtensions.cs</Link>
+    </Compile>
+    <Compile Include="..\CrossPlatformLibrary.Camera.WindowsStore\MediaAccess.cs">
+      <Link>MediaAccess.cs</Link>
+    </Compile>
+    <Compile Include="..\CrossPlatformLibrary.Camera.WindowsStore\PhotoCamera.cs">
+      <Link>PhotoCamera.cs</Link>
+    </Compile>
+    <Compile Include="..\CrossPlatformLibrary.Camera.WindowsStore\VideoCamera.cs">
+      <Link>VideoCamera.cs</Link>
+    </Compile>
     <Compile Include="CameraCaptureUIPage.xaml.cs">
       <DependentUpon>CameraCaptureUIPage.xaml</DependentUpon>
     </Compile>

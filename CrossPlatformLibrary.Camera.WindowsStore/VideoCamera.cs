@@ -8,25 +8,14 @@ namespace CrossPlatformLibrary.Camera
 {
     public class VideoCamera : PhotoCamera, IVideoCamera
     {
-        public VideoCamera(CameraFacingDirection cameraFacingDirection)
-            : base(cameraFacingDirection)
+        public VideoCamera(CameraFacingDirection cameraFacingDirection, bool isEnabled, string name)
+            : base(cameraFacingDirection, isEnabled, name)
         {
         }
 
-        public bool IsCameraAvailable { get; private set; }
-
-        /// <summary>
-        ///     Take a video with specified options
-        /// </summary>
-        /// <param name="options">Video Media Options</param>
-        /// <returns>Media file of new video or null if canceled</returns>
+        /// <inheritdoc />
         public async Task<MediaFile> TakeVideoAsync(StoreVideoOptions options)
         {
-            if (!this.IsCameraAvailable)
-            {
-                throw new NotSupportedException();
-            }
-
             options.VerifyOptions();
 
             var capture = new CameraCaptureUI();
@@ -42,6 +31,5 @@ namespace CrossPlatformLibrary.Camera
 
             return new MediaFile(result.Path, () => result.OpenStreamForReadAsync().Result);
         }
-
     }
 }

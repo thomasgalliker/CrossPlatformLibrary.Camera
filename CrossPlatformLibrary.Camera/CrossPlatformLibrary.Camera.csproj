@@ -39,6 +39,7 @@
     <Compile Include="ContainerExtension.cs" />
     <Compile Include="ICamera.cs" />
     <Compile Include="IMediaAccess.cs" />
+    <Compile Include="IMediaPicker.cs" />
     <Compile Include="IPhotoCamera.cs" />
     <Compile Include="IVideoCamera.cs" />
     <Compile Include="MediaFileNotFoundException.cs" />
