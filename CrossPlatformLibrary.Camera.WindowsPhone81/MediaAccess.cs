@@ -12,7 +12,6 @@ namespace CrossPlatformLibrary.Camera
         private readonly Dictionary<string, Tuple<ICamera, DeviceInformation>> cameras = new Dictionary<string, Tuple<ICamera, DeviceInformation>>();
         private readonly DeviceWatcher watcher;
         private Task init;
-        private bool isCameraAvailable;
 
         public MediaAccess()
         {
@@ -42,61 +41,49 @@ namespace CrossPlatformLibrary.Camera
 
                                 this.cameras.Add(deviceInformation.Id, CreateCamera(deviceInformation));
                             }
-
-                            this.UpdateCameraAvailability();
                         }
 
                         this.init = null;
                     });
         }
 
-        private static Tuple<ICamera, DeviceInformation> CreateCamera(DeviceInformation device)
+        private static Tuple<ICamera, DeviceInformation> CreateCamera(DeviceInformation deviceInformation)
         {
             // TODO GATH: check if we can read video/phot capabilities somewhere
-            var camera = new VideoCamera(device.ToCameraFacingDirection(), device.IsEnabled, device.Name);
+            var camera = new VideoCamera(deviceInformation.ToCameraFacingDirection(), deviceInformation.IsEnabled, deviceInformation.Name);
 
-            return new Tuple<ICamera, DeviceInformation>(camera, device);
+            return new Tuple<ICamera, DeviceInformation>(camera, deviceInformation);
         }
 
-        /// <inheritdoc />
-        ////public bool IsCameraAvailable
-        ////{
-        ////    get
-        ////    {
-        ////        if (this.init != null)
-        ////        {
-        ////            this.init.Wait();
-        ////        }
+        private void WaitUntilInitializationHasFinished()
+        {
+            if (this.init != null)
+            {
+                this.init.Wait();
+            }
+        }
 
-        ////        return this.isCameraAvailable;
-        ////    }
-        ////}
-
-        private void OnDeviceAdded(DeviceWatcher sender, DeviceInformation device)
+        private void OnDeviceAdded(DeviceWatcher sender, DeviceInformation deviceInformation)
         {
             lock (this.cameras)
             {
-                this.cameras.Add(device.Id, CreateCamera(device));
-                this.UpdateCameraAvailability();
+                if (this.cameras.ContainsKey(deviceInformation.Id))
+                {
+                    this.cameras.Remove(deviceInformation.Id);
+                }
+
+                this.cameras.Add(deviceInformation.Id, CreateCamera(deviceInformation));
             }
         }
 
         private void OnDeviceUpdated(DeviceWatcher sender, DeviceInformationUpdate deviceInformationUpdate)
         {
-            ////object value;
-            ////if (!deviceInformationUpdate.Properties.TryGetValue("System.Devices.InterfaceEnabled", out value))
-            ////{
-            ////    return;
-            ////}
-
             lock (this.cameras)
             {
                 if (this.cameras.ContainsKey(deviceInformationUpdate.Id))
                 {
                     var deviceInformation = this.cameras[deviceInformationUpdate.Id].Item2;
                     deviceInformation.Update(deviceInformationUpdate);
-
-                    ////this.cameras[deviceInformationUpdate.Id] = CreateCamera(deviceInformation);
 
                     if (this.cameras.ContainsKey(deviceInformationUpdate.Id))
                     {
@@ -105,8 +92,6 @@ namespace CrossPlatformLibrary.Camera
 
                     this.cameras.Add(deviceInformationUpdate.Id, CreateCamera(deviceInformation));
                 }
-
-                this.UpdateCameraAvailability();
             }
         }
 
@@ -115,19 +100,15 @@ namespace CrossPlatformLibrary.Camera
             lock (this.cameras)
             {
                 this.cameras.Remove(update.Id);
-                this.UpdateCameraAvailability();
             }
-        }
-
-        private void UpdateCameraAvailability()
-        {
-            this.isCameraAvailable = this.cameras.Any(device => device.Value.Item2.IsEnabled);
         }
 
         public IEnumerable<ICamera> Cameras
         {
             get
             {
+                this.WaitUntilInitializationHasFinished();
+
                 return this.cameras.Values.Select(x => x.Item1);
             }
         }

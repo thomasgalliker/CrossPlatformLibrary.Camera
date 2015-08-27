@@ -69,6 +69,7 @@ namespace CrossPlatformLibrary.Camera
     public class StoreCameraMediaOptions
       : StoreMediaOptions
     {
+        public CameraFacingDirection DefaultCamera { get; set; }
     }
 
     public enum VideoQuality

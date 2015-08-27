@@ -1,10 +1,8 @@
 ﻿using System;
 using System.IO;
-using System.IO.IsolatedStorage;
-using System.Threading;
 using System.Threading.Tasks;
-
 using Microsoft.Phone.Tasks;
+using Windows.Storage;
 
 namespace CrossPlatformLibrary.Camera
 {
@@ -19,8 +17,8 @@ namespace CrossPlatformLibrary.Camera
             this.IsEnabled = isEnabled;
             this.Name = name;
 
-            this.cameraCapture = new CameraCaptureTask();
-            this.cameraCapture.Completed += this.OnPhotoChosen;
+            ////this.cameraCapture = new CameraCaptureTask();
+            ////this.cameraCapture.Completed += this.OnPhotoChosen;
         }
 
         public CameraFacingDirection CameraFacingDirection { get; private set; }
@@ -30,7 +28,7 @@ namespace CrossPlatformLibrary.Camera
         public string Name { get; private set; }
 
         /// <inheritdoc />
-        public Task<MediaFile> TakePhotoAsync(StoreCameraMediaOptions options)
+        public async Task<MediaFile> TakePhotoAsync(StoreCameraMediaOptions options)
         {
             if (!this.IsEnabled)
             {
@@ -39,76 +37,90 @@ namespace CrossPlatformLibrary.Camera
 
             options.VerifyOptions();
 
-            var ntcs = new TaskCompletionSource<MediaFile>(options);
-            if (Interlocked.CompareExchange(ref completionSource, ntcs, null) != null)
+            var capture = new CameraCaptureUI();
+            var result = await capture.CaptureFileAsync(CameraCaptureUIMode.Photo, options);
+            if (result == null)
             {
-                throw new InvalidOperationException("Only one operation can be active at a time");
+                return null;
             }
 
-            this.cameraCapture.Show();
+            StorageFolder folder = ApplicationData.Current.LocalFolder;
 
-            return ntcs.Task;
+            string path = options.GetFilePath(folder.Path);
+            var directoryFull = Path.GetDirectoryName(path);
+            var newFolder = directoryFull.Replace(folder.Path, string.Empty);
+            if (!string.IsNullOrWhiteSpace(newFolder))
+            {
+                await folder.CreateFolderAsync(newFolder, CreationCollisionOption.OpenIfExists);
+            }
+
+            folder = await StorageFolder.GetFolderFromPathAsync(directoryFull);
+
+            string filename = Path.GetFileName(path);
+
+            var file = await result.CopyAsync(folder, filename, NameCollisionOption.GenerateUniqueName).AsTask();
+            return new MediaFile(file.Path, () => file.OpenStreamForReadAsync().Result);
         }
 
-        private void OnPhotoChosen(object sender, PhotoResult photoResult)
-        {
-            var tcs = Interlocked.Exchange(ref completionSource, null);
+        ////private void OnPhotoChosen(object sender, PhotoResult photoResult)
+        ////{
+        ////    var tcs = Interlocked.Exchange(ref completionSource, null);
 
-            if (photoResult.TaskResult == TaskResult.Cancel)
-            {
-                tcs.SetResult(null);
-                return;
-            }
+        ////    if (photoResult.TaskResult == TaskResult.Cancel)
+        ////    {
+        ////        tcs.SetResult(null);
+        ////        return;
+        ////    }
 
-            string path = photoResult.OriginalFileName;
+        ////    string path = photoResult.OriginalFileName;
 
-            long pos = photoResult.ChosenPhoto.Position;
-            var options = tcs.Task.AsyncState as StoreCameraMediaOptions;
-            using (var store = IsolatedStorageFile.GetUserStoreForApplication())
-            {
-                path = options.GetUniqueFilepath((options == null) ? "temp" : null, p => store.FileExists(p));
+        ////    long pos = photoResult.ChosenPhoto.Position;
+        ////    var options = tcs.Task.AsyncState as StoreCameraMediaOptions;
+        ////    using (var store = IsolatedStorageFile.GetUserStoreForApplication())
+        ////    {
+        ////        path = options.GetUniqueFilepath((options == null) ? "temp" : null, p => store.FileExists(p));
 
-                string dir = Path.GetDirectoryName(path);
-                if (!String.IsNullOrWhiteSpace(dir))
-                {
-                    store.CreateDirectory(dir);
-                }
+        ////        string dir = Path.GetDirectoryName(path);
+        ////        if (!String.IsNullOrWhiteSpace(dir))
+        ////        {
+        ////            store.CreateDirectory(dir);
+        ////        }
 
-                using (var fs = store.CreateFile(path))
-                {
-                    byte[] buffer = new byte[20480];
-                    int len;
-                    while ((len = photoResult.ChosenPhoto.Read(buffer, 0, buffer.Length)) > 0)
-                    {
-                        fs.Write(buffer, 0, len);
-                    }
+        ////        using (var fs = store.CreateFile(path))
+        ////        {
+        ////            byte[] buffer = new byte[20480];
+        ////            int len;
+        ////            while ((len = photoResult.ChosenPhoto.Read(buffer, 0, buffer.Length)) > 0)
+        ////            {
+        ////                fs.Write(buffer, 0, len);
+        ////            }
 
-                    fs.Flush(flushToDisk: true);
-                }
-            }
+        ////            fs.Flush(flushToDisk: true);
+        ////        }
+        ////    }
 
-            Action<bool> dispose = null;
-            if (options == null)
-            {
-                dispose = d => { using (var store = IsolatedStorageFile.GetUserStoreForApplication()) store.DeleteFile(path); };
-            }
+        ////    Action<bool> dispose = null;
+        ////    if (options == null)
+        ////    {
+        ////        dispose = d => { using (var store = IsolatedStorageFile.GetUserStoreForApplication()) store.DeleteFile(path); };
+        ////    }
 
-            switch (photoResult.TaskResult)
-            {
-                case TaskResult.OK:
-                    photoResult.ChosenPhoto.Position = pos;
-                    tcs.SetResult(new MediaFile(path, () => photoResult.ChosenPhoto, dispose: dispose));
-                    break;
+        ////    switch (photoResult.TaskResult)
+        ////    {
+        ////        case TaskResult.OK:
+        ////            photoResult.ChosenPhoto.Position = pos;
+        ////            tcs.SetResult(new MediaFile(path, () => photoResult.ChosenPhoto, dispose: dispose));
+        ////            break;
 
-                case TaskResult.None:
-                    photoResult.ChosenPhoto.Dispose();
-                    if (photoResult.Error != null)
-                    {
-                        tcs.SetResult(null);
-                    }
+        ////        case TaskResult.None:
+        ////            photoResult.ChosenPhoto.Dispose();
+        ////            if (photoResult.Error != null)
+        ////            {
+        ////                tcs.SetResult(null);
+        ////            }
 
-                    break;
-            }
-        }
+        ////            break;
+        ////    }
+        ////}
     }
 }

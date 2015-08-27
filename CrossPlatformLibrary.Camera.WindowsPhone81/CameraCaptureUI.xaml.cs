@@ -2,7 +2,7 @@
 using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
-using DMX.Helper;
+
 using Windows.ApplicationModel;
 using Windows.Devices.Enumeration;
 using Windows.Media.Capture;
@@ -17,13 +17,6 @@ using Panel = Windows.Devices.Enumeration.Panel;
 
 namespace CrossPlatformLibrary.Camera
 {
-    internal enum CameraCaptureUIMode
-    {
-        PhotoOrVideo,
-        Photo,
-        Video
-    }
-
     internal sealed partial class CameraCaptureUI : UserControl
     {
         // store the pic here
@@ -139,9 +132,9 @@ namespace CrossPlatformLibrary.Camera
 
         public async Task CleanUpAsync()
         {
-            if (this.myCaptureElement != null)
+            if (this.MyCaptureElement != null)
             {
-                this.myCaptureElement.Source = null;
+                this.MyCaptureElement.Source = null;
             }
 
             if (this.MyMediaCapture != null)
@@ -201,7 +194,7 @@ namespace CrossPlatformLibrary.Camera
             await this.MyMediaCapture.InitializeAsync(captureSettings);
 
             // Assign to Xaml CaptureElement.Source and start preview
-            this.myCaptureElement.Source = this.MyMediaCapture;
+            this.MyCaptureElement.Source = this.MyMediaCapture;
 
             // show preview
             await this.MyMediaCapture.StartPreviewAsync();
@@ -234,7 +227,7 @@ namespace CrossPlatformLibrary.Camera
             }
         }
 
-        private async void Button_Click(object sender, RoutedEventArgs e)
+        private async void OnShutterButtonClicked(object sender, RoutedEventArgs e)
         {
             // Create new file in the pictures library     
 

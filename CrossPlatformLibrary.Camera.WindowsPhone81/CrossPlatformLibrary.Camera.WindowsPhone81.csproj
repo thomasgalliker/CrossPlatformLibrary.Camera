@@ -80,18 +80,13 @@
     <Prefer32Bit>true</Prefer32Bit>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="..\CrossPlatformLibrary.Camera.WindowsPhone8\MediaPicker.cs">
+      <Link>MediaPicker.cs</Link>
+    </Compile>
     <Compile Include="..\CrossPlatformLibrary.Camera.WindowsStore\DeviceInformationExtensions.cs">
       <Link>DeviceInformationExtensions.cs</Link>
     </Compile>
-    <Compile Include="..\CrossPlatformLibrary.Camera.WindowsStore\MediaAccess.cs">
-      <Link>MediaAccess.cs</Link>
-    </Compile>
-    <Compile Include="..\CrossPlatformLibrary.Camera.WindowsStore\PhotoCamera.cs">
-      <Link>PhotoCamera.cs</Link>
-    </Compile>
-    <Compile Include="..\CrossPlatformLibrary.Camera.WindowsStore\VideoCamera.cs">
-      <Link>VideoCamera.cs</Link>
-    </Compile>
+    <Compile Include="CameraCaptureUIMode.cs" />
     <Compile Include="CameraCaptureUIPage.xaml.cs">
       <DependentUpon>CameraCaptureUIPage.xaml</DependentUpon>
     </Compile>
@@ -99,7 +94,10 @@
     <Compile Include="CameraCaptureUI.xaml.cs">
       <DependentUpon>CameraCaptureUI.xaml</DependentUpon>
     </Compile>
+    <Compile Include="MediaAccess.cs" />
+    <Compile Include="PhotoCamera.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="VideoCamera.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\CrossPlatformLibrary.Camera\CrossPlatformLibrary.Camera.csproj">

@@ -102,11 +102,13 @@
     <Prefer32Bit>true</Prefer32Bit>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="..\CrossPlatformLibrary.Camera.WindowsPhone81\MediaAccess.cs">
+      <Link>MediaAccess.cs</Link>
+    </Compile>
     <Compile Include="..\CrossPlatformLibrary.Camera.WindowsPhone8\MediaPicker.cs">
       <Link>MediaPicker.cs</Link>
     </Compile>
     <Compile Include="DeviceInformationExtensions.cs" />
-    <Compile Include="MediaAccess.cs" />
     <Compile Include="PhotoCamera.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="VideoCamera.cs" />
