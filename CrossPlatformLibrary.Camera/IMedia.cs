@@ -38,7 +38,7 @@ namespace CrossPlatformLibrary.Camera
         /// </summary>
         /// <param name="options">Camera Media Options</param>
         /// <returns>Media file of photo or null if canceled</returns>
-        Task<MediaFile> TakePhotoAsync(StoreCameraMediaOptions options);
+        Task<MediaFile> TakePhotoAsync(StoreMediaOptions options);
 
         /// <summary>
         /// Picks a video from the default gallery

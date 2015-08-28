@@ -2,6 +2,7 @@
 using System.IO;
 using System.Threading.Tasks;
 
+using Windows.Devices.Enumeration;
 using Windows.Media.Capture;
 using Windows.Storage;
 
@@ -9,21 +10,39 @@ namespace CrossPlatformLibrary.Camera
 {
     public class PhotoCamera : IPhotoCamera
     {
-        public PhotoCamera(CameraFacingDirection cameraFacingDirection, bool isEnabled, string name)
+        private readonly DeviceInformation deviceInformation;
+
+        protected PhotoCamera(DeviceInformation deviceInformation)
         {
-            this.CameraFacingDirection = cameraFacingDirection;
-            this.IsEnabled = isEnabled;
-            this.Name = name;
+            this.deviceInformation = deviceInformation;
         }
 
-        public CameraFacingDirection CameraFacingDirection { get; private set; }
+        public CameraFacingDirection CameraFacingDirection
+        {
+            get
+            {
+                return this.deviceInformation.ToCameraFacingDirection();
+            }
+        }
 
-        public bool IsEnabled { get; private set; }
+        public bool IsEnabled
+        {
+            get
+            {
+                return this.deviceInformation.IsEnabled;
+            }
+        }
 
-        public string Name { get; private set; }
+        public string Name
+        {
+            get
+            {
+                return this.deviceInformation.Name;
+            }
+        }
 
         /// <inheritdoc />
-        public async Task<MediaFile> TakePhotoAsync(StoreCameraMediaOptions options)
+        public async Task<MediaFile> TakePhotoAsync(StoreMediaOptions options)
         {
             if (!this.IsEnabled)
             {

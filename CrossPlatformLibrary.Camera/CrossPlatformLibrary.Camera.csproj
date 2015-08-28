@@ -43,11 +43,11 @@
     <Compile Include="IPhotoCamera.cs" />
     <Compile Include="IVideoCamera.cs" />
     <Compile Include="MediaFileNotFoundException.cs" />
-    <Compile Include="IMedia.cs" />
-    <Compile Include="MediaExtensions.cs" />
     <Compile Include="MediaFile.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="MediaStoreOptions.cs" />
+    <Compile Include="VideoQuality.cs" />
+    <Compile Include="StoreMediaOptions.cs" />
+    <Compile Include="StoreVideoOptions.cs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="CrossPlatformLibrary, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">

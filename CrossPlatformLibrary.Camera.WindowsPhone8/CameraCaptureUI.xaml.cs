@@ -5,12 +5,12 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
-using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using Microsoft.Devices;
 using Microsoft.Phone.Controls;
 using Microsoft.Xna.Framework;
 using Windows.Storage;
+
 
 namespace CrossPlatformLibrary.Camera
 {
@@ -25,30 +25,32 @@ namespace CrossPlatformLibrary.Camera
     /// </summary>
     public partial class CameraCaptureUI : UserControl
     {
-        private static ManualResetEvent _cameraCaptureEvent = new ManualResetEvent(true);
-        private static ManualResetEvent _cameraInitializedEvent = new ManualResetEvent(false);
-        private static ManualResetEvent _pauseFramesEvent = new ManualResetEvent(true);
+        private static ManualResetEvent cameraCaptureEvent = new ManualResetEvent(true);
+        private static ManualResetEvent cameraInitializedEvent = new ManualResetEvent(false);
+        private static ManualResetEvent pauseFramesEvent = new ManualResetEvent(true);
 
-        private int _cameraHeight = -1;
-
-        private int _cameraWidth = -1;
-
-        private bool _photoOnPress;
-
+        private int cameraHeight = -1;
+        private int cameraWidth = -1;
+        private bool enableShutterKey = true;
         ////private SoundEffect _cameraShutterSound;
+        private bool pumpFrames;
+        private Thread pumpFramesThread;
 
-        private bool _pumpFrames;
+        private Grid mainGrid;
+        private readonly PhoneApplicationFrame rootVisual;
+        private readonly CameraFacingDirection cameraFacingDirection;
+        private UIElementCollection mainGridChildren;
 
-        private Thread _pumpFramesThread;
-
-        public CameraCaptureUI(bool startPumpingFrames = true)
+        public CameraCaptureUI(CameraFacingDirection cameraFacingDirection, bool startPumpingFrames = true)
         {
+            this.StopFlag = false;
             this.InitializeComponent();
+
+            this.cameraFacingDirection = cameraFacingDirection == CameraFacingDirection.Undefined ? CameraFacingDirection.Front : cameraFacingDirection;
+            
             this.Unloaded += this.OnUnloaded;
-            this.PhotoOnPress = true;
 
             var pageName = typeof(CameraCaptureUIPage).Name;
-
             this.rootVisual = (PhoneApplicationFrame)Application.Current.RootVisual;
             this.rootVisual.Navigated += this.OriginalFrameNavigated;
             this.rootVisual.Navigate(new Uri(string.Format("/CrossPlatformLibrary.Camera.Platform;component/{0}.xaml", pageName), UriKind.Relative));
@@ -86,186 +88,174 @@ namespace CrossPlatformLibrary.Camera
             }
         }
 
-        private Grid mainGrid;
-        private readonly PhoneApplicationFrame rootVisual;
-
-        private UIElementCollection mainGridChildren { get; set; }
-
         private CameraCaptureUIPage MyCciPage { get; set; }
 
-        public EventHandler<CameraOperationCompletedEventArgs> CamInitialized { get; set; }
+        private Microsoft.Devices.PhotoCamera camera;
 
-        public Microsoft.Devices.PhotoCamera Camera { get; private set; }
-
-        /// <summary>
-        ///     Gets or sets the camera height.
-        /// </summary>
         public int CameraHeight
         {
             get
             {
-                return this._cameraHeight;
+                return this.cameraHeight;
             }
 
             set
             {
-                this._cameraHeight = value;
+                this.cameraHeight = value;
             }
         }
 
-        /// <summary>
-        ///     Gets or sets the camera width.
-        /// </summary>
         public int CameraWidth
         {
             get
             {
-                return this._cameraWidth;
+                return this.cameraWidth;
             }
 
             set
             {
-                this._cameraWidth = value;
+                this.cameraWidth = value;
             }
         }
 
-        /// <summary>
-        ///     Gets or sets the new camera capture image.
-        /// </summary>
+        public EventHandler<CameraOperationCompletedEventArgs> CamInitialized { get; set; }
+
         public EventHandler<ContentReadyEventArgs> NewCameraCaptureImage { get; set; }
 
-        /// <summary>
-        ///     Gets or sets the new camera frame.
-        /// </summary>
         public EventHandler<CameraFrameEventArgs> NewCameraFrame { get; set; }
 
-        /// <summary>
-        ///     Gets or sets a value indicating whether photo on press.
-        /// </summary>
-        public bool PhotoOnPress
+        public bool EnableShutterKey
         {
             get
             {
-                return this._photoOnPress;
+                return this.enableShutterKey;
             }
 
             set
             {
-                this._photoOnPress = value;
+                this.enableShutterKey = value;
                 CameraButtons.ShutterKeyPressed -= this.CameraButtonsOnShutterKeyPressed;
-                CameraButtons.ShutterKeyHalfPressed -= this.CameraButtons_ShutterKeyHalfPressed;
-                if (this._photoOnPress)
+                CameraButtons.ShutterKeyHalfPressed -= this.CameraButtonsShutterKeyHalfPressed;
+                if (this.enableShutterKey)
                 {
                     CameraButtons.ShutterKeyPressed += this.CameraButtonsOnShutterKeyPressed;
-                    CameraButtons.ShutterKeyHalfPressed += this.CameraButtons_ShutterKeyHalfPressed;
+                    CameraButtons.ShutterKeyHalfPressed += this.CameraButtonsShutterKeyHalfPressed;
                 }
             }
         }
 
-        /// <summary>
-        ///     Gets or sets a value indicating whether save to camera roll.
-        /// </summary>
-        public bool SaveToCameraRoll { get; set; }
-
         public bool TakingPhoto { get; private set; }
 
-        public void InitializeCamera()
+        private void InitializeCamera()
         {
-            _cameraInitializedEvent.Reset();
+            cameraInitializedEvent.Reset();
 
-            // Check to see if the camera is available on the device.
-            if (Microsoft.Devices.Camera.IsCameraTypeSupported(CameraType.Primary) || Microsoft.Devices.Camera.IsCameraTypeSupported(CameraType.FrontFacing))
+            // Initialize the default camera.
+            this.camera = new Microsoft.Devices.PhotoCamera(this.cameraFacingDirection.ToCameraType());
+
+            // Event is fired when the PhotoCamera object has been initialized
+            this.camera.Initialized += this.CameraInitialized;
+            this.camera.CaptureImageAvailable += this.CameraOnCaptureImageAvailable;
+            this.camera.CaptureCompleted += this.CameraOnCaptureCompleted;
+
+            // Adjust mirroring according to camera type
+            if (this.camera.CameraType == CameraType.Primary)
             {
-                // Initialize the default camera.
-                this.Camera = new Microsoft.Devices.PhotoCamera(CameraType.FrontFacing);
-
-                // Event is fired when the PhotoCamera object has been initialized
-                this.Camera.Initialized += this.CameraInitialized;
-                this.Camera.CaptureImageAvailable += this.CameraOnCaptureImageAvailable;
-                this.Camera.CaptureCompleted += this.CameraOnCaptureCompleted;
-
-                // Adjust mirroring according to camera type
-                if (this.Camera.CameraType == CameraType.Primary)
-                {
-                    this.viewfinderBrush.RelativeTransform = new CompositeTransform() { CenterX = 0.5, CenterY = 0.5, Rotation = 90 };
-                }
-                else
-                {
-                    this.viewfinderBrush.RelativeTransform = new CompositeTransform() { CenterX = 0.5, CenterY = 0.5, Rotation = 90, ScaleX = -1 };
-                }
-
-                // Set the VideoBrush source to the camera
-                this.viewfinderBrush = new VideoBrush();
-                this.viewfinderBrush.SetSource(this.Camera);
-                this.videoRectangle.Fill = this.viewfinderBrush;
-
-                // initialize the shutter sound
-                // Audio
-                ////Stream stream = TitleContainer.OpenStream("shutter.wav");
-                ////_cameraShutterSound = SoundEffect.FromStream(stream);
-                CameraButtons.ShutterKeyPressed -= this.CameraButtonsOnShutterKeyPressed;
-                CameraButtons.ShutterKeyHalfPressed -= this.CameraButtons_ShutterKeyHalfPressed;
-                if (this._photoOnPress)
-                {
-                    CameraButtons.ShutterKeyPressed += this.CameraButtonsOnShutterKeyPressed;
-                    CameraButtons.ShutterKeyHalfPressed += this.CameraButtons_ShutterKeyHalfPressed;
-                }
+                this.viewfinderBrush.RelativeTransform = new CompositeTransform { CenterX = 0.5, CenterY = 0.5, Rotation = 90 };
             }
             else
             {
-                // The camera is not supported on the device.
-                MessageBox.Show("Sorry, this sample requires a phone camera and no camera is detected. This application will not show any camera output.");
+                this.viewfinderBrush.RelativeTransform = new CompositeTransform { CenterX = 0.5, CenterY = 0.5, Rotation = 90, ScaleX = -1 };
             }
+
+            // Set the VideoBrush source to the camera
+            this.viewfinderBrush = new VideoBrush();
+            this.viewfinderBrush.SetSource(this.camera);
+            this.videoRectangle.Fill = this.viewfinderBrush;
+
+            // initialize the shutter sound
+            // Audio
+            ////Stream stream = TitleContainer.OpenStream("shutter.wav");
+            ////_cameraShutterSound = SoundEffect.FromStream(stream);
+
+            this.EnableShutterKey = true;
         }
 
         public void StartPumpingFrames()
         {
-            _pauseFramesEvent = new ManualResetEvent(true);
-            _cameraCaptureEvent = new ManualResetEvent(true);
-            _cameraInitializedEvent = new ManualResetEvent(false);
+            pauseFramesEvent = new ManualResetEvent(true);
+            cameraCaptureEvent = new ManualResetEvent(true);
+            cameraInitializedEvent = new ManualResetEvent(false);
 
             this.InitializeCamera();
 
-            // if (_pumpFramesThread != null)
+            // if (pumpFramesThread != null)
             // {
-            // if (_pumpFramesThread.IsAlive)
-            // _pumpFramesThread.Abort();
-            // _pumpFramesThread = null;
+            // if (pumpFramesThread.IsAlive)
+            // pumpFramesThread.Abort();
+            // pumpFramesThread = null;
             // }
-            this._pumpFrames = true;
-            if (this._pumpFramesThread == null)
+            this.pumpFrames = true;
+            if (this.pumpFramesThread == null)
             {
-                this._pumpFramesThread = new Thread(this.PumpFrames);
+                this.pumpFramesThread = new Thread(this.PumpFrames);
             }
 
-            if (!this._pumpFramesThread.IsAlive)
+            if (!this.pumpFramesThread.IsAlive)
             {
-                this._pumpFramesThread.Start();
+                this.pumpFramesThread.Start();
+            }
+        }
+
+        private void PumpFrames()
+        {
+            cameraInitializedEvent.WaitOne();
+            var pixels = new int[this.CameraWidth * this.CameraHeight];
+
+            int numExceptions = 0;
+            while (this.pumpFrames)
+            {
+                pauseFramesEvent.WaitOne();
+                cameraCaptureEvent.WaitOne();
+                cameraInitializedEvent.WaitOne();
+
+                try
+                {
+                    this.camera.GetPreviewBufferArgb32(pixels);
+                }
+                catch (Exception e)
+                {
+                    // If we get an exception try capturing again, do this up to 10 times
+                    if (numExceptions >= 10)
+                    {
+                        throw e;
+                    }
+
+                    numExceptions++;
+                    continue;
+                }
+
+                numExceptions = 0;
+
+                pauseFramesEvent.Reset();
+
+                Deployment.Current.Dispatcher.BeginInvoke(
+                    () =>
+                    {
+                        if (this.NewCameraFrame != null && this.pumpFrames)
+                        {
+                            this.NewCameraFrame(this, new CameraFrameEventArgs { ARGBData = pixels });
+                        }
+
+                        pauseFramesEvent.Set();
+                    });
             }
         }
 
         public void StopPumpingFrames()
         {
-            this._pumpFrames = false;
-            this._pumpFramesThread = null;
-        }
-
-        /// <summary>
-        ///     The take photo.
-        /// </summary>
-        public void TakePhoto()
-        {
-            if (this.TakingPhoto)
-            {
-                return;
-            }
-
-            _cameraCaptureEvent.Reset();
-            FrameworkDispatcher.Update();
-
-            ////_cameraShutterSound.Play();
-            this.TakingPhoto = true;
-            this.Camera.CaptureImage();
+            this.pumpFrames = false;
+            this.pumpFramesThread = null;
         }
 
         public void UpdateOrientation(PageOrientation orientation)
@@ -284,20 +274,75 @@ namespace CrossPlatformLibrary.Camera
             }
         }
 
-        private void CameraButtonsOnShutterKeyPressed(object sender, EventArgs eventArgs)
+        /// <summary>
+        ///     This is a loop which waits async until the flag has been set.
+        /// </summary>
+        private async Task IsStopped()
         {
-            if (this._photoOnPress && !this.TakingPhoto)
+            while (!this.StopFlag)
             {
-                _cameraCaptureEvent.WaitOne();
-                this.TakePhoto();
+                await Task.Delay(WaitForClickLoopLength);
             }
         }
 
-        private void CameraButtons_ShutterKeyHalfPressed(object sender, EventArgs e)
+        private const short WaitForClickLoopLength = 1000;
+
+        private bool StopFlag;
+        private StorageFile file;
+
+        public async Task<StorageFile> CaptureFileAsync()
         {
-            if (this.Camera.IsFocusSupported)
+            var t = this.IsStopped();
+
+            await t;
+
+            // Cleanup
+            this.StopPumpingFrames();
+            this.rootVisual.GoBack();
+
+            return this.file;
+        }
+
+        private void OnShutterButtonClicked(object sender, RoutedEventArgs e)
+        {
+            if (!this.TakingPhoto)
             {
-                this.Camera.Focus();
+                cameraInitializedEvent.WaitOne();
+                cameraCaptureEvent.WaitOne();
+                this.CaptureImageFromCamera();
+            }
+        }
+
+        private void CameraButtonsOnShutterKeyPressed(object sender, EventArgs eventArgs)
+        {
+            if (this.enableShutterKey && !this.TakingPhoto)
+            {
+                cameraInitializedEvent.WaitOne();
+                cameraCaptureEvent.WaitOne();
+                this.CaptureImageFromCamera();
+            }
+        }
+
+        private void CaptureImageFromCamera()
+        {
+            if (this.TakingPhoto)
+            {
+                return;
+            }
+
+            cameraCaptureEvent.Reset();
+            FrameworkDispatcher.Update();
+
+            ////_cameraShutterSound.Play();
+            this.TakingPhoto = true;
+            this.camera.CaptureImage();
+        }
+
+        private void CameraButtonsShutterKeyHalfPressed(object sender, EventArgs e)
+        {
+            if (this.camera.IsFocusSupported)
+            {
+                this.camera.Focus();
             }
         }
 
@@ -308,16 +353,16 @@ namespace CrossPlatformLibrary.Camera
                 try
                 {
                     // available resolutions are ordered based on number of pixels in each resolution
-                    this.CameraWidth = (int)this.Camera.PreviewResolution.Width;
-                    this.CameraHeight = (int)this.Camera.PreviewResolution.Height;
+                    this.CameraWidth = (int)this.camera.PreviewResolution.Width;
+                    this.CameraHeight = (int)this.camera.PreviewResolution.Height;
 
                     if (this.CamInitialized != null)
                     {
                         this.CamInitialized.Invoke(this, e);
                     }
 
-                    _cameraInitializedEvent.Set();
-                    _pauseFramesEvent.Set();
+                    cameraInitializedEvent.Set();
+                    pauseFramesEvent.Set();
                 }
                 catch (ObjectDisposedException)
                 {
@@ -328,8 +373,20 @@ namespace CrossPlatformLibrary.Camera
 
         private void CameraOnCaptureCompleted(object sender, CameraOperationCompletedEventArgs cameraOperationCompletedEventArgs)
         {
-            _cameraCaptureEvent.Set();
+            cameraCaptureEvent.Set();
             this.TakingPhoto = false;
+        }
+
+        private static async Task<StorageFile> SaveToLocalFolderAsync(Stream stream, string fileName)
+        {
+            StorageFolder localFolder = ApplicationData.Current.LocalFolder;
+            StorageFile storageFile = await localFolder.CreateFileAsync(fileName, CreationCollisionOption.ReplaceExisting);
+            using (Stream outputStream = await storageFile.OpenStreamForWriteAsync())
+            {
+                await stream.CopyToAsync(outputStream);
+            }
+
+            return storageFile;
         }
 
         private void CameraOnCaptureImageAvailable(object sender, ContentReadyEventArgs contentReadyEventArgs)
@@ -338,80 +395,20 @@ namespace CrossPlatformLibrary.Camera
             {
                 this.NewCameraCaptureImage.Invoke(this, contentReadyEventArgs);
             }
-        }
 
-        private WriteableBitmap CreateWriteableBitmap(Stream imageStream, int width, int height)
-        {
-            var bitmap = new WriteableBitmap(width, height);
-
-            imageStream.Position = 0;
-            bitmap.LoadJpeg(imageStream);
-            return bitmap;
+            Task.Factory.StartNew(
+                async () =>
+                    {
+                        this.file = await SaveToLocalFolderAsync(contentReadyEventArgs.ImageStream, "_____ccuiphoto.jpg");
+                        this.StopFlag = true;
+                    });
         }
 
         private void OnUnloaded(object sender, RoutedEventArgs e)
         {
-            _cameraInitializedEvent.Reset();
+            cameraInitializedEvent.Reset();
             CameraButtons.ShutterKeyPressed -= this.CameraButtonsOnShutterKeyPressed;
-            CameraButtons.ShutterKeyHalfPressed -= this.CameraButtons_ShutterKeyHalfPressed;
-        }
-
-        private void PumpFrames()
-        {
-            _cameraInitializedEvent.WaitOne();
-            var pixels = new int[this.CameraWidth * this.CameraHeight];
-
-            int numExceptions = 0;
-            while (this._pumpFrames)
-            {
-                _pauseFramesEvent.WaitOne();
-                _cameraCaptureEvent.WaitOne();
-                _cameraInitializedEvent.WaitOne();
-
-                try
-                {
-                    this.Camera.GetPreviewBufferArgb32(pixels);
-                }
-                catch (Exception e)
-                {
-                    // If we get an exception try capturing again, do this up to 10 times
-                    if (numExceptions >= 10)
-                    {
-                        throw e;
-                    }
-
-                    numExceptions++;
-                    continue;
-                }
-
-                numExceptions = 0;
-
-                _pauseFramesEvent.Reset();
-
-                Deployment.Current.Dispatcher.BeginInvoke(
-                    () =>
-                        {
-                            if (this.NewCameraFrame != null && this._pumpFrames)
-                            {
-                                this.NewCameraFrame(this, new CameraFrameEventArgs { ARGBData = pixels });
-                            }
-
-                            _pauseFramesEvent.Set();
-                        });
-            }
-        }
-
-        private async void OnShutterButtonClicked(object sender, RoutedEventArgs e)
-        {
-            // TODO GATH: Implement the take pciture functionality. Signal the CaptureFileAsync method to continue
-        }
-
-        public async Task<StorageFile> CaptureFileAsync(CameraCaptureUIMode mode, StoreCameraMediaOptions options)
-        {
-            await Task.Delay(1000);
-
-            ////this.StopPumpingFrames(); ???
-            return new StorageFile(); // TODO GATH: Implement
+            CameraButtons.ShutterKeyHalfPressed -= this.CameraButtonsShutterKeyHalfPressed;
         }
     }
 }

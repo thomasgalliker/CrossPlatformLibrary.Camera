@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 
 using CrossPlatformLibrary.IoC;
 
@@ -13,18 +14,21 @@ namespace CrossPlatformLibrary.Camera
 
         public MediaAccess()
         {
-            this.cameras = new List<ICamera>(2);
-
             try
             {
-                if (Microsoft.Devices.Camera.IsCameraTypeSupported(CameraType.Primary))
+                this.cameras = new List<ICamera>(2);
+
+                foreach (var cameraType in Enum.GetValues(typeof(CameraType)).OfType<CameraType>())
                 {
-                    this.cameras.Add(new PhotoCamera(CameraFacingDirection.Rear, true, "Primary"));
+                    if (Microsoft.Devices.Camera.IsCameraTypeSupported(cameraType))
+                    {
+                        this.cameras.Add(new PhotoCamera(cameraType.ToCameraFacingDirection(), true, cameraType.ToString()));
+                    }
                 }
 
-                if (Microsoft.Devices.Camera.IsCameraTypeSupported(CameraType.FrontFacing))
+                if (!this.cameras.Any())
                 {
-                    this.cameras.Add(new PhotoCamera(CameraFacingDirection.Front, true, "FrontFacing"));
+                    throw new InvalidOperationException("Could not find any cameras. Unable to use MediaAccess if no camera is present.");
                 }
             }
             catch (Exception ex)

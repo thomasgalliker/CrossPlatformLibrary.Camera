@@ -90,7 +90,6 @@
     <Compile Include="CameraCaptureUIPage.xaml.cs">
       <DependentUpon>CameraCaptureUIPage.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Media.cs" />
     <Compile Include="CameraCaptureUI.xaml.cs">
       <DependentUpon>CameraCaptureUI.xaml</DependentUpon>
     </Compile>

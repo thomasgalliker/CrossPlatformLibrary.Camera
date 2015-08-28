@@ -2,14 +2,15 @@
 using System.IO;
 using System.Threading.Tasks;
 
+using Windows.Devices.Enumeration;
 using Windows.Media.Capture;
 
 namespace CrossPlatformLibrary.Camera
 {
     public class VideoCamera : PhotoCamera, IVideoCamera
     {
-        public VideoCamera(CameraFacingDirection cameraFacingDirection, bool isEnabled, string name)
-            : base(cameraFacingDirection, isEnabled, name)
+        public VideoCamera(DeviceInformation deviceInformation)
+            : base(deviceInformation)
         {
         }
 

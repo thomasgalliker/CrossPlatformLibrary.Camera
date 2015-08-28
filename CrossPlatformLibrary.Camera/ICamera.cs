@@ -12,6 +12,9 @@ namespace CrossPlatformLibrary.Camera
         /// </summary>
         bool IsEnabled { get; }
 
+        /// <summary>
+        /// The name of the camera device.
+        /// </summary>
         string Name { get; }
     }
 }

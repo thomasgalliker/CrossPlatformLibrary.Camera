@@ -93,7 +93,7 @@
     <Compile Include="CameraCaptureUIPage.xaml.cs">
       <DependentUpon>CameraCaptureUIPage.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Media.cs" />
+    <Compile Include="CameraTypeExtensions.cs" />
     <Compile Include="MediaAccess.cs" />
     <Compile Include="MediaPicker.cs" />
     <Compile Include="PhotoCamera.cs" />

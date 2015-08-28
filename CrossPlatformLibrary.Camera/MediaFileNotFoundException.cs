@@ -16,9 +16,6 @@ namespace CrossPlatformLibrary.Camera
             this.Path = path;
         }
 
-        /// <summary>
-        ///     Path
-        /// </summary>
         public string Path { get; private set; }
     }
 }

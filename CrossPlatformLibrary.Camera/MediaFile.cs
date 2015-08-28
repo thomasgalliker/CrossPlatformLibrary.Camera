@@ -5,13 +5,6 @@ namespace CrossPlatformLibrary.Camera
 {
     public sealed class MediaFile : IDisposable
     {
-        /// <summary>
-        ///     Constructor
-        /// </summary>
-        /// <param name="path"></param>
-        /// <param name="streamGetter"></param>
-        /// <param name="deletePathOnDispose"></param>
-        /// <param name="dispose"></param>
         public MediaFile(string path, Func<Stream> streamGetter, bool deletePathOnDispose = false, Action<bool> dispose = null)
         {
             this.dispose = dispose;
@@ -19,6 +12,14 @@ namespace CrossPlatformLibrary.Camera
             this.path = path;
             this.deletePathOnDispose = deletePathOnDispose;
         }
+
+        ////public MediaFile(string path, Func<Task<Stream>> streamGetter, bool deletePathOnDispose = false, Action<bool> dispose = null)
+        ////{
+        ////    this.dispose = dispose;
+        ////    this.streamGetterTask = streamGetter;
+        ////    this.path = path;
+        ////    this.deletePathOnDispose = deletePathOnDispose;
+        ////}
 
         public string Path
         {
@@ -47,6 +48,11 @@ namespace CrossPlatformLibrary.Camera
             return this.streamGetter();
         }
 
+        ////public async Task<Stream> GetStreamAsync()
+        ////{
+        ////    return await this.streamGetterTask();
+        ////}
+
         /// <summary>
         /// </summary>
         public void Dispose()
@@ -58,6 +64,7 @@ namespace CrossPlatformLibrary.Camera
         private bool isDisposed;
         private readonly Action<bool> dispose;
         private readonly Func<Stream> streamGetter;
+        ////private Func<Task<Stream>> streamGetterTask;
         private readonly string path;
         private readonly bool deletePathOnDispose;
 

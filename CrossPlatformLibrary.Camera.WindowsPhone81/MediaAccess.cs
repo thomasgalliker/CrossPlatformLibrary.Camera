@@ -49,9 +49,7 @@ namespace CrossPlatformLibrary.Camera
 
         private static Tuple<ICamera, DeviceInformation> CreateCamera(DeviceInformation deviceInformation)
         {
-            // TODO GATH: check if we can read video/phot capabilities somewhere
-            var camera = new VideoCamera(deviceInformation.ToCameraFacingDirection(), deviceInformation.IsEnabled, deviceInformation.Name);
-
+            var camera = new VideoCamera(deviceInformation);
             return new Tuple<ICamera, DeviceInformation>(camera, deviceInformation);
         }
 

@@ -84,7 +84,7 @@ namespace CrossPlatformLibrary.Camera
         /// </summary>
         /// <param name="options"></param>
         /// <returns></returns>
-        public Intent GetTakePhotoUI(StoreCameraMediaOptions options)
+        public Intent GetTakePhotoUI(StoreMediaOptions options)
         {
             if (!this.IsCameraAvailable)
                 throw new NotSupportedException();
@@ -132,7 +132,7 @@ namespace CrossPlatformLibrary.Camera
         /// </summary>
         /// <param name="options">Camera Media Options</param>
         /// <returns>Media file of photo or null if canceled</returns>
-        public Task<MediaFile> TakePhotoAsync(StoreCameraMediaOptions options)
+        public Task<MediaFile> TakePhotoAsync(StoreMediaOptions options)
         {
             if (!this.IsCameraAvailable)
                 throw new NotSupportedException();

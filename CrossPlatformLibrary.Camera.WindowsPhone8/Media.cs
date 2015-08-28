@@ -96,7 +96,7 @@ namespace CrossPlatformLibrary.Camera
         /// </summary>
         /// <param name="options">Camera Media Options</param>
         /// <returns>Media file of photo or null if canceled</returns>
-        public Task<MediaFile> TakePhotoAsync(StoreCameraMediaOptions options)
+        public Task<MediaFile> TakePhotoAsync(StoreMediaOptions options)
         {
             if (!this.IsCameraAvailable)
             {
@@ -168,7 +168,7 @@ namespace CrossPlatformLibrary.Camera
             string path = photoResult.OriginalFileName;
 
             long pos = photoResult.ChosenPhoto.Position;
-            var options = tcs.Task.AsyncState as StoreCameraMediaOptions;
+            var options = tcs.Task.AsyncState as StoreMediaOptions;
             using (var store = IsolatedStorageFile.GetUserStoreForApplication())
             {
                 path = options.GetUniqueFilepath((options == null) ? "temp" : null, p => store.FileExists(p));

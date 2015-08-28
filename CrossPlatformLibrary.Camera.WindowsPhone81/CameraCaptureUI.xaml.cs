@@ -1,17 +1,14 @@
 ﻿using System;
 using System.Diagnostics;
-using System.Linq;
 using System.Threading.Tasks;
 
 using Windows.ApplicationModel;
-using Windows.Devices.Enumeration;
 using Windows.Media.Capture;
 using Windows.Media.MediaProperties;
 using Windows.Phone.UI.Input;
 using Windows.Storage;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
-using Panel = Windows.Devices.Enumeration.Panel;
 
 // The User Control item template is documented at http://go.microsoft.com/fwlink/?LinkId=234236
 
@@ -94,7 +91,7 @@ namespace CrossPlatformLibrary.Camera
                 var ccu = ccuipage.MyCCUCtrl;
 
                 // start captureing again
-                await ccu.CaptureFileAsync(CameraCaptureUIMode.Photo, this.options);
+                await ccu.CaptureFileAsync(this.videoDeviceId);
             }
             else
             {
@@ -162,35 +159,14 @@ namespace CrossPlatformLibrary.Camera
             }
         }
 
-        private StoreCameraMediaOptions options;
-
-        /// <summary>
-        ///     This method takes a picture.
-        ///     Right now the parameter is not evaluated.
-        /// </summary>
-        /// <param name="mode"></param>
-        /// <param name="options"></param>
-        /// <returns></returns>
-        public async Task<StorageFile> CaptureFileAsync(CameraCaptureUIMode mode, StoreCameraMediaOptions options)
+        public async Task<StorageFile> CaptureFileAsync(string videoDeviceId)
         {
             var t = this.IsStopped();
-            this.options = options;
+            this.videoDeviceId = videoDeviceId;
+
             // Create new MediaCapture 
             this.MyMediaCapture = new MediaCapture();
-            var videoDevices = await DeviceInformation.FindAllAsync(DeviceClass.VideoCapture);
-            var backCamera = videoDevices.FirstOrDefault(item => item.EnclosureLocation != null && item.EnclosureLocation.Panel == Panel.Back);
-
-            var frontCamera = videoDevices.FirstOrDefault(item => item.EnclosureLocation != null && item.EnclosureLocation.Panel == Panel.Front);
-
-            var captureSettings = new MediaCaptureInitializationSettings();
-            if (options.DefaultCamera == CameraFacingDirection.Front && frontCamera != null)
-            {
-                captureSettings.VideoDeviceId = frontCamera.Id;
-            }
-            else if (options.DefaultCamera == CameraFacingDirection.Rear && backCamera != null)
-            {
-                captureSettings.VideoDeviceId = backCamera.Id;
-            }
+            var captureSettings = new MediaCaptureInitializationSettings { VideoDeviceId = videoDeviceId };
             await this.MyMediaCapture.InitializeAsync(captureSettings);
 
             // Assign to Xaml CaptureElement.Source and start preview
@@ -245,6 +221,7 @@ namespace CrossPlatformLibrary.Camera
         public UIElementCollection mainGridChildren { get; set; }
 
         public bool locker = false;
+        private string videoDeviceId;
 
         public Application app { get; set; }
 

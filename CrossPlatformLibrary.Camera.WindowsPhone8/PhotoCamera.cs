@@ -16,19 +16,19 @@ namespace CrossPlatformLibrary.Camera
             this.CameraFacingDirection = cameraFacingDirection;
             this.IsEnabled = isEnabled;
             this.Name = name;
-
-            ////this.cameraCapture = new CameraCaptureTask();
-            ////this.cameraCapture.Completed += this.OnPhotoChosen;
         }
 
+        /// <inheritdoc />
         public CameraFacingDirection CameraFacingDirection { get; private set; }
 
+        /// <inheritdoc />
         public bool IsEnabled { get; private set; }
 
+        /// <inheritdoc />
         public string Name { get; private set; }
 
         /// <inheritdoc />
-        public async Task<MediaFile> TakePhotoAsync(StoreCameraMediaOptions options)
+        public async Task<MediaFile> TakePhotoAsync(StoreMediaOptions options)
         {
             if (!this.IsEnabled)
             {
@@ -37,8 +37,8 @@ namespace CrossPlatformLibrary.Camera
 
             options.VerifyOptions();
 
-            var capture = new CameraCaptureUI();
-            var result = await capture.CaptureFileAsync(CameraCaptureUIMode.Photo, options);
+            var capture = new CameraCaptureUI(this.CameraFacingDirection);
+            var result = await capture.CaptureFileAsync();
             if (result == null)
             {
                 return null;
@@ -58,69 +58,10 @@ namespace CrossPlatformLibrary.Camera
 
             string filename = Path.GetFileName(path);
 
-            var file = await result.CopyAsync(folder, filename, NameCollisionOption.GenerateUniqueName).AsTask();
-            return new MediaFile(file.Path, () => file.OpenStreamForReadAsync().Result);
+            var file = await result.CopyAsync(folder, filename, NameCollisionOption.GenerateUniqueName).AsTask().ConfigureAwait(false);
+
+            Stream stream = await file.OpenStreamForReadAsync().ConfigureAwait(false);
+            return new MediaFile(file.Path, () => stream);
         }
-
-        ////private void OnPhotoChosen(object sender, PhotoResult photoResult)
-        ////{
-        ////    var tcs = Interlocked.Exchange(ref completionSource, null);
-
-        ////    if (photoResult.TaskResult == TaskResult.Cancel)
-        ////    {
-        ////        tcs.SetResult(null);
-        ////        return;
-        ////    }
-
-        ////    string path = photoResult.OriginalFileName;
-
-        ////    long pos = photoResult.ChosenPhoto.Position;
-        ////    var options = tcs.Task.AsyncState as StoreCameraMediaOptions;
-        ////    using (var store = IsolatedStorageFile.GetUserStoreForApplication())
-        ////    {
-        ////        path = options.GetUniqueFilepath((options == null) ? "temp" : null, p => store.FileExists(p));
-
-        ////        string dir = Path.GetDirectoryName(path);
-        ////        if (!String.IsNullOrWhiteSpace(dir))
-        ////        {
-        ////            store.CreateDirectory(dir);
-        ////        }
-
-        ////        using (var fs = store.CreateFile(path))
-        ////        {
-        ////            byte[] buffer = new byte[20480];
-        ////            int len;
-        ////            while ((len = photoResult.ChosenPhoto.Read(buffer, 0, buffer.Length)) > 0)
-        ////            {
-        ////                fs.Write(buffer, 0, len);
-        ////            }
-
-        ////            fs.Flush(flushToDisk: true);
-        ////        }
-        ////    }
-
-        ////    Action<bool> dispose = null;
-        ////    if (options == null)
-        ////    {
-        ////        dispose = d => { using (var store = IsolatedStorageFile.GetUserStoreForApplication()) store.DeleteFile(path); };
-        ////    }
-
-        ////    switch (photoResult.TaskResult)
-        ////    {
-        ////        case TaskResult.OK:
-        ////            photoResult.ChosenPhoto.Position = pos;
-        ////            tcs.SetResult(new MediaFile(path, () => photoResult.ChosenPhoto, dispose: dispose));
-        ////            break;
-
-        ////        case TaskResult.None:
-        ////            photoResult.ChosenPhoto.Dispose();
-        ////            if (photoResult.Error != null)
-        ////            {
-        ////                tcs.SetResult(null);
-        ////            }
-
-        ////            break;
-        ////    }
-        ////}
     }
 }

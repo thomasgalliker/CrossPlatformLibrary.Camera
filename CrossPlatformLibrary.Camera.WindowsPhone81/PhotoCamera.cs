@@ -2,27 +2,54 @@
 using System.IO;
 using System.Threading.Tasks;
 
+using Windows.Devices.Enumeration;
 using Windows.Storage;
 
 namespace CrossPlatformLibrary.Camera
 {
     public class PhotoCamera : IPhotoCamera
     {
-        public PhotoCamera(CameraFacingDirection cameraFacingDirection, bool isEnabled, string name)
+        protected readonly DeviceInformation deviceInformation;
+
+        protected PhotoCamera(DeviceInformation deviceInformation)
         {
-            this.CameraFacingDirection = cameraFacingDirection;
-            this.IsEnabled = isEnabled;
-            this.Name = name;
+            this.deviceInformation = deviceInformation;
         }
 
-        public CameraFacingDirection CameraFacingDirection { get; private set; }
+        protected string DeviceId
+        {
+            get
+            {
+                return this.deviceInformation.Id;
+            }
+        }
 
-        public bool IsEnabled { get; private set; }
+        public CameraFacingDirection CameraFacingDirection
+        {
+            get
+            {
+                return this.deviceInformation.ToCameraFacingDirection();
+            }
+        }
 
-        public string Name { get; private set; }
+        public bool IsEnabled
+        {
+            get
+            {
+                return this.deviceInformation.IsEnabled;
+            }
+        }
+
+        public string Name
+        {
+            get
+            {
+                return this.deviceInformation.Name;
+            }
+        }
 
         /// <inheritdoc />
-        public async Task<MediaFile> TakePhotoAsync(StoreCameraMediaOptions options) // TODO GATH: link from WindowsStore assembly
+        public async Task<MediaFile> TakePhotoAsync(StoreMediaOptions options) // TODO GATH: link from WindowsStore assembly
         {
             if (!this.IsEnabled)
             {
@@ -35,7 +62,7 @@ namespace CrossPlatformLibrary.Camera
             ////capture.PhotoSettings.Format = CameraCaptureUIPhotoFormat.Jpeg;
             ////capture.PhotoSettings.MaxResolution = CameraCaptureUIMaxPhotoResolution.HighestAvailable;
 
-            var result = await capture.CaptureFileAsync(CameraCaptureUIMode.Photo, options);
+            var result = await capture.CaptureFileAsync(this.deviceInformation.Id);
             if (result == null)
             {
                 return null;

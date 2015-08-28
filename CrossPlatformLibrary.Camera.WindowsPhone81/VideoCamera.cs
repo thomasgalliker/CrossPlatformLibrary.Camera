@@ -1,12 +1,14 @@
 ﻿using System.IO;
 using System.Threading.Tasks;
 
+using Windows.Devices.Enumeration;
+
 namespace CrossPlatformLibrary.Camera
 {
     public class VideoCamera : PhotoCamera, IVideoCamera
     {
-        public VideoCamera(CameraFacingDirection cameraFacingDirection, bool isEnabled, string name)
-            : base(cameraFacingDirection, isEnabled, name)
+        public VideoCamera(DeviceInformation deviceInformation)
+            : base(deviceInformation)
         {
         }
 
@@ -20,7 +22,7 @@ namespace CrossPlatformLibrary.Camera
             //capture.VideoSettings.MaxDurationInSeconds = (float)options.DesiredLength.TotalSeconds;
             //capture.VideoSettings.Format = CameraCaptureUIVideoFormat.Mp4;
 
-            var result = await capture.CaptureFileAsync(CameraCaptureUIMode.Video, options);
+            var result = await capture.CaptureFileAsync(this.DeviceId);
             if (result == null)
             {
                 return null;
