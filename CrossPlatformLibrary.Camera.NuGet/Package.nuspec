@@ -2,7 +2,7 @@
 <package xmlns="http://schemas.microsoft.com/packaging/2012/06/nuspec.xsd">
   <metadata>
     <id>CrossPlatformLibrary.Camera</id>
-    <version>1.0.42-alpha</version>
+    <version>1.0.53-alpha</version>
     <title>CrossPlatformLibrary.Camera</title>
     <authors>Thomas Galliker</authors>
     <licenseUrl>http://opensource.org/licenses/Apache-2.0</licenseUrl>
@@ -90,6 +90,12 @@
     <!--Windows Phone 8.1-->
     <file src="..\CrossPlatformLibrary.Camera\bin\Release\CrossPlatformLibrary.Camera.dll" target="lib\wpa81\CrossPlatformLibrary.Camera.dll" />
     <file src="..\CrossPlatformLibrary.Camera.WindowsPhone81\Bin\Release\CrossPlatformLibrary.Camera.Platform.dll" target="lib\wpa81\CrossPlatformLibrary.Camera.Platform.dll" />
+    <file src="..\WindowsPhone81CameraCaptureUI\bin\Release\CameraControls.dll" target="lib\wpa81\CameraControls.dll" />
+    <file src="..\WindowsPhone81CameraCaptureUI\bin\Release\CameraControls.pri" target="lib\wpa81\CameraControls.pri" />
+    <file src="..\WindowsPhone81CameraCaptureUI\bin\Release\CameraControls.xr.xml" target="lib\wpa81\CameraControls\CameraControls.xr.xml" />
+    <file src="..\WindowsPhone81CameraCaptureUI\bin\Release\CameraCaptureUI.xbf" target="lib\wpa81\CameraControls\CameraCaptureUI.xbf" />
+    <file src="..\WindowsPhone81CameraCaptureUI\bin\Release\CameraCaptureUIPage.xbf" target="lib\wpa81\CameraControls\CameraCaptureUIPage.xbf" />
+    <file src="..\WindowsPhone81CameraCaptureUI\bin\Release\Themes\Generic.xbf" target="lib\wpa81\CameraControls\Themes\Generic.xbf" />
 
     <!--Windows Store-->
     <file src="..\CrossPlatformLibrary.Camera\bin\Release\CrossPlatformLibrary.Camera.dll" target="lib\win81\CrossPlatformLibrary.Camera.dll" />

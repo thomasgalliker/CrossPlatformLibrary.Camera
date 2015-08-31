@@ -12,6 +12,6 @@ namespace CrossPlatformLibrary.Camera
 
         ////event EventHandler<ICamera> CameraRemoved;
 
-        IMediaPicker MediaPicker { get; }
+        IMediaLibrary MediaLibrary { get; }
     }
 }

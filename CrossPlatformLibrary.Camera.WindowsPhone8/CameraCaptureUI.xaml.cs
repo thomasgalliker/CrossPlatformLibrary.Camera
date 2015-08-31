@@ -23,7 +23,7 @@ namespace CrossPlatformLibrary.Camera
     ///     Shows the camera view and raises events when new camera frames are ready
     ///     Uses code from sample at  http://msdn.microsoft.com/en-us/library/hh202982(v=vs.92).aspx
     /// </summary>
-    public partial class CameraCaptureUI : UserControl
+    public sealed partial class CameraCaptureUI : UserControl
     {
         private static ManualResetEvent cameraCaptureEvent = new ManualResetEvent(true);
         private static ManualResetEvent cameraInitializedEvent = new ManualResetEvent(false);

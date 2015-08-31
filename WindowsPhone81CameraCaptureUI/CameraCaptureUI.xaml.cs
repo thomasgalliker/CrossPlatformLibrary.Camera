@@ -9,32 +9,74 @@ using Windows.Phone.UI.Input;
 using Windows.Storage;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
+using Windows.UI.Xaml.Navigation;
+
+using CrossPlatformLibrary.Camera;
 
 // The User Control item template is documented at http://go.microsoft.com/fwlink/?LinkId=234236
 
-namespace CrossPlatformLibrary.Camera
+namespace CameraControls
 {
-    internal sealed partial class CameraCaptureUI : UserControl
+    public sealed partial class CameraCaptureUI : UserControl // TODO GATH: Can be internal?
     {
-        // store the pic here
         private StorageFile file;
-
-        // stop flag - needed to find when to get back to former page
 
         public bool StopFlag { get; set; }
 
         // the root grid of our camera ui page
-        private readonly Grid mainGrid;
+        private Grid mainGrid;
 
         public MediaCapture MyMediaCapture { get; set; }
 
-        private readonly Frame originalFrame;
         private const short WaitForClickLoopLength = 1000;
 
-        /// <summary>
-        ///     Navigates to the CameraCaptureUIPage in a new Frame and show the control
-        /// </summary
-        public CameraCaptureUI()
+        ////public CameraCaptureUI(CameraFacingDirection cameraFacingDirection, bool startPumpingFrames = true)
+        ////{
+        ////    this.StopFlag = false;
+        ////    this.InitializeComponent();
+
+        ////    this.cameraFacingDirection = cameraFacingDirection == CameraFacingDirection.Undefined ? CameraFacingDirection.Front : cameraFacingDirection;
+
+        ////    this.Unloaded += this.OnUnloaded;
+
+        ////    this.rootVisual = (Frame)Window.Current.Content;
+        ////    this.rootVisual.Navigated += this.OriginalFrameNavigated;
+        ////    this.rootVisual.Navigate(typeof(CameraCaptureUIPage));
+
+        ////    if (startPumpingFrames)
+        ////    {
+        ////        ////this.StartPumpingFrames();
+        ////    }
+        ////}
+
+        ////private void OriginalFrameNavigated(object sender, NavigationEventArgs e)
+        ////{
+        ////    var content = e.Content as CameraCaptureUIPage;
+        ////    if (content != null)
+        ////    {
+        ////        this.rootVisual.Navigated -= this.OriginalFrameNavigated;
+
+        ////        // set references current CCUI page
+        ////        this.MyCciPage = ((CameraCaptureUIPage)e.Content);
+
+        ////        this.MyCciPage.MyCCUCtrl = this;
+
+        ////        // set content
+        ////        this.mainGrid = (Grid)(this.MyCciPage).Content;
+
+        ////        // Remove all children, if any exist
+        ////        this.mainGridChildren = this.mainGrid.Children;
+        ////        foreach (var item in this.mainGridChildren)
+        ////        {
+        ////            this.mainGrid.Children.Remove(item);
+        ////        }
+
+        ////        // Show Ctrl
+        ////        this.mainGrid.Children.Add(this);
+        ////    }
+        ////}
+
+        public CameraCaptureUI(CameraFacingDirection cameraFacingDirection, bool startPumpingFrames = true)
         {
             this.StopFlag = false;
             this.InitializeComponent();
@@ -129,9 +171,9 @@ namespace CrossPlatformLibrary.Camera
 
         public async Task CleanUpAsync()
         {
-            if (this.MyCaptureElement != null)
+            if (this.previewElement != null)
             {
-                this.MyCaptureElement.Source = null;
+                this.previewElement.Source = null;
             }
 
             if (this.MyMediaCapture != null)
@@ -170,7 +212,7 @@ namespace CrossPlatformLibrary.Camera
             await this.MyMediaCapture.InitializeAsync(captureSettings);
 
             // Assign to Xaml CaptureElement.Source and start preview
-            this.MyCaptureElement.Source = this.MyMediaCapture;
+            this.previewElement.Source = this.MyMediaCapture;
 
             // show preview
             await this.MyMediaCapture.StartPreviewAsync();
@@ -222,6 +264,9 @@ namespace CrossPlatformLibrary.Camera
 
         public bool locker = false;
         private string videoDeviceId;
+        private CameraFacingDirection cameraFacingDirection;
+        private readonly Frame rootVisual;
+        private readonly Frame originalFrame;
 
         public Application app { get; set; }
 
@@ -230,5 +275,12 @@ namespace CrossPlatformLibrary.Camera
         public Window CurrentWindow { get; set; }
 
         public Frame NewCamCapFrame { get; set; }
+
+        private void OnUnloaded(object sender, RoutedEventArgs e)
+        {
+            ////cameraInitializedEvent.Reset();
+            ////CameraButtons.ShutterKeyPressed -= this.CameraButtonsOnShutterKeyPressed;
+            ////CameraButtons.ShutterKeyHalfPressed -= this.CameraButtonsShutterKeyHalfPressed;
+        }
     }
 }

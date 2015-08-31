@@ -1,5 +1,5 @@
 ﻿<UserControl
-    x:Class="CrossPlatformLibrary.Camera.CameraCaptureUI"
+    x:Class="CameraControls.CameraCaptureUI"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
@@ -12,7 +12,7 @@
             <RowDefinition />
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
-        <CaptureElement Grid.Row="0" x:Name="MyCaptureElement" Stretch="UniformToFill" />
+        <CaptureElement Grid.Row="0" x:Name="previewElement" Stretch="UniformToFill" />
         <StackPanel Grid.Row="1" Background="Transparent">
             <AppBarButton VerticalAlignment="Center" HorizontalAlignment="Center"
                        Click="OnShutterButtonClicked"  Icon="Camera" />

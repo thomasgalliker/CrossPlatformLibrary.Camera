@@ -1,9 +1,15 @@
-﻿using System.Threading.Tasks;
+﻿using System.IO;
+using System.Threading.Tasks;
 
 namespace CrossPlatformLibrary.Camera
 {
-    public interface IMediaPicker
+    public interface IMediaLibrary
     {
+        /// <summary>
+        /// Saves the given stream as jpeg to the camera roll.
+        /// </summary>
+        Task SaveToCameraRoll(Stream stream);
+
         /// <summary>
         ///     Picks a photo from the default gallery
         /// </summary>

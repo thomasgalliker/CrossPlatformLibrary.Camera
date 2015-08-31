@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 2013
-VisualStudioVersion = 12.0.31101.0
+VisualStudioVersion = 12.0.40629.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "nuget", "nuget", "{B5AEA046-0E87-4A7B-8F11-80B6BDDA1F2A}"
 EndProject
@@ -20,6 +20,8 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CrossPlatformLibrary.Camera.WindowsStore", "CrossPlatformLibrary.Camera.WindowsStore\CrossPlatformLibrary.Camera.WindowsStore.csproj", "{ED9A4CA1-C04C-457D-9A2E-7995CCF12356}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CrossPlatformLibrary.Camera", "CrossPlatformLibrary.Camera\CrossPlatformLibrary.Camera.csproj", "{A6FCEF44-D2BA-42C7-B3CB-13667BCD7B54}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CrossPlatformLibrary.Camera.WindowsPhone81.CameraControls", "WindowsPhone81CameraCaptureUI\CrossPlatformLibrary.Camera.WindowsPhone81.CameraControls.csproj", "{57F3314C-8D42-4140-B412-B933C2B3A724}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -127,6 +129,20 @@ Global
 		{A6FCEF44-D2BA-42C7-B3CB-13667BCD7B54}.Release|ARM.ActiveCfg = Release|Any CPU
 		{A6FCEF44-D2BA-42C7-B3CB-13667BCD7B54}.Release|x64.ActiveCfg = Release|Any CPU
 		{A6FCEF44-D2BA-42C7-B3CB-13667BCD7B54}.Release|x86.ActiveCfg = Release|Any CPU
+		{57F3314C-8D42-4140-B412-B933C2B3A724}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{57F3314C-8D42-4140-B412-B933C2B3A724}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{57F3314C-8D42-4140-B412-B933C2B3A724}.Debug|ARM.ActiveCfg = Debug|ARM
+		{57F3314C-8D42-4140-B412-B933C2B3A724}.Debug|ARM.Build.0 = Debug|ARM
+		{57F3314C-8D42-4140-B412-B933C2B3A724}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{57F3314C-8D42-4140-B412-B933C2B3A724}.Debug|x86.ActiveCfg = Debug|x86
+		{57F3314C-8D42-4140-B412-B933C2B3A724}.Debug|x86.Build.0 = Debug|x86
+		{57F3314C-8D42-4140-B412-B933C2B3A724}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{57F3314C-8D42-4140-B412-B933C2B3A724}.Release|Any CPU.Build.0 = Release|Any CPU
+		{57F3314C-8D42-4140-B412-B933C2B3A724}.Release|ARM.ActiveCfg = Release|ARM
+		{57F3314C-8D42-4140-B412-B933C2B3A724}.Release|ARM.Build.0 = Release|ARM
+		{57F3314C-8D42-4140-B412-B933C2B3A724}.Release|x64.ActiveCfg = Release|Any CPU
+		{57F3314C-8D42-4140-B412-B933C2B3A724}.Release|x86.ActiveCfg = Release|x86
+		{57F3314C-8D42-4140-B412-B933C2B3A724}.Release|x86.Build.0 = Release|x86
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

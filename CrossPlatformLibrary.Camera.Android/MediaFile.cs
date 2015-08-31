@@ -32,7 +32,7 @@ namespace CrossPlatformLibrary.Camera
             string action = self.GetStringExtra("action");
             if (action == null)
             {
-                throw new ArgumentException("Intent was not results from MediaPicker", "self");
+                throw new ArgumentException("Intent was not results from MediaLibrary", "self");
             }
 
             var uri = (Uri)self.GetParcelableExtra("MediaFile");

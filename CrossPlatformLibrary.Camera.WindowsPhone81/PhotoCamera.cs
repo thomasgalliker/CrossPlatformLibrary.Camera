@@ -1,7 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Threading.Tasks;
-
+using CameraControls;
 using Windows.Devices.Enumeration;
 using Windows.Storage;
 
@@ -9,7 +9,7 @@ namespace CrossPlatformLibrary.Camera
 {
     public class PhotoCamera : IPhotoCamera
     {
-        protected readonly DeviceInformation deviceInformation;
+        private readonly DeviceInformation deviceInformation;
 
         protected PhotoCamera(DeviceInformation deviceInformation)
         {
@@ -58,7 +58,7 @@ namespace CrossPlatformLibrary.Camera
 
             options.VerifyOptions();
 
-            var capture = new CameraCaptureUI();
+            var capture = new CameraCaptureUI(this.CameraFacingDirection);
             ////capture.PhotoSettings.Format = CameraCaptureUIPhotoFormat.Jpeg;
             ////capture.PhotoSettings.MaxResolution = CameraCaptureUIMaxPhotoResolution.HighestAvailable;
 
@@ -82,8 +82,10 @@ namespace CrossPlatformLibrary.Camera
 
             string filename = Path.GetFileName(path);
 
-            var file = await result.CopyAsync(folder, filename, NameCollisionOption.GenerateUniqueName).AsTask();
-            return new MediaFile(file.Path, () => file.OpenStreamForReadAsync().Result);
+            var file = await result.CopyAsync(folder, filename, NameCollisionOption.GenerateUniqueName).AsTask().ConfigureAwait(false);
+
+            Stream stream = await file.OpenStreamForReadAsync().ConfigureAwait(false);
+            return new MediaFile(file.Path, () => stream);
         }
     }
 }

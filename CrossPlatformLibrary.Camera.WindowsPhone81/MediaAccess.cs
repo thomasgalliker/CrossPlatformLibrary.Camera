@@ -111,11 +111,11 @@ namespace CrossPlatformLibrary.Camera
             }
         }
 
-        public IMediaPicker MediaPicker
+        public IMediaLibrary MediaLibrary
         {
             get
             {
-                return SimpleIoc.Default.GetInstance<IMediaPicker>();
+                return SimpleIoc.Default.GetInstance<IMediaLibrary>();
             }
         }
 

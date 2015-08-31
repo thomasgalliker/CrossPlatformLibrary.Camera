@@ -1,6 +1,6 @@
 ﻿using System.IO;
 using System.Threading.Tasks;
-
+using CameraControls;
 using Windows.Devices.Enumeration;
 
 namespace CrossPlatformLibrary.Camera
@@ -17,7 +17,7 @@ namespace CrossPlatformLibrary.Camera
         {
             options.VerifyOptions();
 
-            var capture = new CameraCaptureUI();
+            var capture = new CameraCaptureUI(this.CameraFacingDirection);
             //capture.VideoSettings.MaxResolution = options.Quality.GetResolutionFromQuality();
             //capture.VideoSettings.MaxDurationInSeconds = (float)options.DesiredLength.TotalSeconds;
             //capture.VideoSettings.Format = CameraCaptureUIVideoFormat.Mp4;
