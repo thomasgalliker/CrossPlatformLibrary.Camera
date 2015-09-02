@@ -1,5 +1,4 @@
-﻿using System.Windows.Navigation;
-
+﻿
 using Microsoft.Phone.Controls;
 
 
@@ -12,11 +11,14 @@ namespace CrossPlatformLibrary.Camera
             this.InitializeComponent();
         }
 
-        protected override void OnNavigatedTo(NavigationEventArgs e)
+        protected override void OnOrientationChanged(OrientationChangedEventArgs e)
         {
-            base.OnNavigatedTo(e);
-            ////this.cameraViewer.SaveToCameraRoll = true;
-            ////this.cameraViewer.StartPumpingFrames();
+            if (this.MyCCUCtrl != null)
+            {
+                this.MyCCUCtrl.UpdateOrientation(e.Orientation);
+            }
+
+            base.OnOrientationChanged(e);
         }
 
         internal CameraCaptureUI MyCCUCtrl { get; set; }

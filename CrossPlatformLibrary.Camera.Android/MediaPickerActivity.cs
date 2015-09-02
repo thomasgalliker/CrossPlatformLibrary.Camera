@@ -16,9 +16,6 @@ using Uri = Android.Net.Uri;
 
 namespace CrossPlatformLibrary.Camera
 {
-    /// <summary>
-    ///     Picker
-    /// </summary>
     [Activity]
     [Preserve(AllMembers = true)]
     public class MediaPickerActivity : Activity

@@ -58,7 +58,7 @@ namespace CrossPlatformLibrary.Camera
 
             options.VerifyOptions();
 
-            var capture = new CameraCaptureUI(this.CameraFacingDirection);
+            var capture = new CameraCaptureUI();
             ////capture.PhotoSettings.Format = CameraCaptureUIPhotoFormat.Jpeg;
             ////capture.PhotoSettings.MaxResolution = CameraCaptureUIMaxPhotoResolution.HighestAvailable;
 

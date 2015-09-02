@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 
+
 namespace CrossPlatformLibrary.Camera
 {
     public class StoreMediaOptions
@@ -19,17 +20,10 @@ namespace CrossPlatformLibrary.Camera
 
         public void VerifyOptions()
         {
-            //if (!Enum.IsDefined (typeof(MediaFileStoreLocation), options.Location))
-            //    throw new ArgumentException ("options.Location is not a member of MediaFileStoreLocation");
-            //if (options.Location == MediaFileStoreLocation.Local)
-            //{
-            //if (String.IsNullOrWhiteSpace (options.Directory))
-            //	throw new ArgumentNullException ("options", "For local storage, options.Directory must be set");
             if (Path.IsPathRooted(this.Directory))
             {
                 throw new ArgumentException("options.Directory must be a relative path", "options");
             }
-            //}
         }
 
         public string GetFilePath(string rootPath)

@@ -17,7 +17,7 @@ namespace CrossPlatformLibrary.Camera
         {
             options.VerifyOptions();
 
-            var capture = new CameraCaptureUI(this.CameraFacingDirection);
+            var capture = new CameraCaptureUI();
             //capture.VideoSettings.MaxResolution = options.Quality.GetResolutionFromQuality();
             //capture.VideoSettings.MaxDurationInSeconds = (float)options.DesiredLength.TotalSeconds;
             //capture.VideoSettings.Format = CameraCaptureUIVideoFormat.Mp4;

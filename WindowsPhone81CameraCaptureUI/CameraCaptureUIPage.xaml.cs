@@ -15,7 +15,7 @@ namespace CameraControls
     {
         private readonly DisplayOrientations previous;
 
-        private void HardwareButtons_BackPressed(object sender, BackPressedEventArgs e)
+        private void HardwareButtonsBackPressed(object sender, BackPressedEventArgs e)
         {
             DisplayInformation.AutoRotationPreferences = this.previous;
         }
@@ -31,12 +31,14 @@ namespace CameraControls
         {
             this.previous = DisplayInformation.AutoRotationPreferences;
             DisplayInformation.AutoRotationPreferences = DisplayOrientations.Landscape;
-            this.Loaded += this.CameraCaptureUIPage_Loaded;
-            this.Unloaded += this.CameraCaptureUIPage_Unloaded;
+
+            this.Loaded += this.OnLoaded;
+            this.Unloaded += this.OnUnloaded;
+
             this.InitializeComponent();
         }
 
-        private void CameraCaptureUIPage_Unloaded(object sender, RoutedEventArgs e)
+        private void OnUnloaded(object sender, RoutedEventArgs e)
         {
             var app = Application.Current;
             app.Suspending -= this.MyCCUCtrl.AppSuspending;
@@ -44,7 +46,7 @@ namespace CameraControls
             DisplayInformation.AutoRotationPreferences = this.previous;
         }
 
-        private void CameraCaptureUIPage_Loaded(object sender, RoutedEventArgs e)
+        private void OnLoaded(object sender, RoutedEventArgs e)
         {
         }
 

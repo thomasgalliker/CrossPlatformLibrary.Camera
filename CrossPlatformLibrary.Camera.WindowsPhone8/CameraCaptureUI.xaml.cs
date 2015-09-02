@@ -11,6 +11,7 @@ using Microsoft.Phone.Controls;
 using Microsoft.Xna.Framework;
 using Windows.Storage;
 
+// Credits to: https://msdn.microsoft.com/library/windows/apps/hh202956(v=vs.105).aspx
 
 namespace CrossPlatformLibrary.Camera
 {
@@ -41,13 +42,13 @@ namespace CrossPlatformLibrary.Camera
         private readonly CameraFacingDirection cameraFacingDirection;
         private UIElementCollection mainGridChildren;
 
-        public CameraCaptureUI(CameraFacingDirection cameraFacingDirection, bool startPumpingFrames = true)
+        public CameraCaptureUI(CameraFacingDirection cameraFacingDirection)
         {
             this.StopFlag = false;
             this.InitializeComponent();
 
             this.cameraFacingDirection = cameraFacingDirection == CameraFacingDirection.Undefined ? CameraFacingDirection.Front : cameraFacingDirection;
-            
+
             this.Unloaded += this.OnUnloaded;
 
             var pageName = typeof(CameraCaptureUIPage).Name;
@@ -55,10 +56,7 @@ namespace CrossPlatformLibrary.Camera
             this.rootVisual.Navigated += this.OriginalFrameNavigated;
             this.rootVisual.Navigate(new Uri(string.Format("/CrossPlatformLibrary.Camera.Platform;component/{0}.xaml", pageName), UriKind.Relative));
 
-            if (startPumpingFrames)
-            {
-                this.StartPumpingFrames();
-            }
+            this.StartPumpingFrames(); // TODO GATH: can be later, when TakePicture method is called
         }
 
         private void OriginalFrameNavigated(object sender, NavigationEventArgs e)
@@ -144,7 +142,7 @@ namespace CrossPlatformLibrary.Camera
             }
         }
 
-        public bool TakingPhoto { get; private set; }
+        private bool TakingPhoto { get; set; }
 
         private void InitializeCamera()
         {
@@ -158,7 +156,13 @@ namespace CrossPlatformLibrary.Camera
             this.camera.CaptureImageAvailable += this.CameraOnCaptureImageAvailable;
             this.camera.CaptureCompleted += this.CameraOnCaptureCompleted;
 
+            // Set the VideoBrush source to the camera
+            this.viewfinderBrush = new VideoBrush();
+            this.viewfinderBrush.SetSource(this.camera);
+            this.videoRectangle.Fill = this.viewfinderBrush;
+
             // Adjust mirroring according to camera type
+            this.UpdateOrientation(PageOrientation.Portrait);
             if (this.camera.CameraType == CameraType.Primary)
             {
                 this.viewfinderBrush.RelativeTransform = new CompositeTransform { CenterX = 0.5, CenterY = 0.5, Rotation = 90 };
@@ -168,11 +172,6 @@ namespace CrossPlatformLibrary.Camera
                 this.viewfinderBrush.RelativeTransform = new CompositeTransform { CenterX = 0.5, CenterY = 0.5, Rotation = 90, ScaleX = -1 };
             }
 
-            // Set the VideoBrush source to the camera
-            this.viewfinderBrush = new VideoBrush();
-            this.viewfinderBrush.SetSource(this.camera);
-            this.videoRectangle.Fill = this.viewfinderBrush;
-
             // initialize the shutter sound
             // Audio
             ////Stream stream = TitleContainer.OpenStream("shutter.wav");
@@ -181,7 +180,7 @@ namespace CrossPlatformLibrary.Camera
             this.EnableShutterKey = true;
         }
 
-        public void StartPumpingFrames()
+        private void StartPumpingFrames()
         {
             pauseFramesEvent = new ManualResetEvent(true);
             cameraCaptureEvent = new ManualResetEvent(true);
@@ -241,37 +240,59 @@ namespace CrossPlatformLibrary.Camera
 
                 Deployment.Current.Dispatcher.BeginInvoke(
                     () =>
-                    {
-                        if (this.NewCameraFrame != null && this.pumpFrames)
                         {
-                            this.NewCameraFrame(this, new CameraFrameEventArgs { ARGBData = pixels });
-                        }
+                            if (this.NewCameraFrame != null && this.pumpFrames)
+                            {
+                                this.NewCameraFrame(this, new CameraFrameEventArgs { ARGBData = pixels });
+                            }
 
-                        pauseFramesEvent.Set();
-                    });
+                            pauseFramesEvent.Set();
+                        });
             }
         }
 
-        public void StopPumpingFrames()
+        private void StopPumpingFrames()
         {
             this.pumpFrames = false;
             this.pumpFramesThread = null;
         }
 
-        public void UpdateOrientation(PageOrientation orientation)
+        internal void UpdateOrientation(PageOrientation orientation)
         {
-            if (orientation == PageOrientation.PortraitDown)
+            if ((orientation & PageOrientation.Portrait) == PageOrientation.Portrait)
             {
-                this.viewfinderBrush.RelativeTransform = new CompositeTransform { CenterX = 0.5, CenterY = 0.5, Rotation = -90 };
+                this.m_orientationAngle = 0;
             }
-            else if (orientation == PageOrientation.PortraitUp)
+            else if ((orientation & PageOrientation.LandscapeLeft) == PageOrientation.LandscapeLeft)
             {
-                this.viewfinderBrush.RelativeTransform = new CompositeTransform { CenterX = 0.5, CenterY = 0.5, Rotation = 90 };
+                this.m_orientationAngle = -90;
             }
             else
             {
-                this.viewfinderBrush.RelativeTransform = new CompositeTransform { CenterX = 0.5, CenterY = 0.5, Rotation = 0 };
+                this.m_orientationAngle = +90;
             }
+            this.ComputeVideoBruchTransform();
+        }
+        
+        private void ComputeVideoBruchTransform()
+        {
+            if (this.camera == null)
+            {
+                return;
+            }
+
+            var t = new TransformGroup();
+            if (this.camera.CameraType == CameraType.FrontFacing)
+            {
+                t.Children.Add(new CompositeTransform() { Rotation = -(this.m_orientationAngle - 180), CenterX = this.videoRectangle.ActualWidth / 2, CenterY = this.videoRectangle.ActualHeight / 2 });
+                t.Children.Add(new ScaleTransform() { ScaleX = -1, CenterX = this.videoRectangle.ActualWidth / 2, CenterY = this.videoRectangle.ActualHeight / 2 });
+            }
+            else
+            {
+                t.Children.Add(new CompositeTransform() { Rotation = this.m_orientationAngle + 180, CenterX = this.videoRectangle.ActualWidth / 2, CenterY = this.videoRectangle.ActualHeight / 2 });
+            }
+
+            this.viewfinderBrush.Transform = t;
         }
 
         /// <summary>
@@ -289,6 +310,7 @@ namespace CrossPlatformLibrary.Camera
 
         private bool StopFlag;
         private StorageFile file;
+        private int m_orientationAngle;
 
         public async Task<StorageFile> CaptureFileAsync()
         {

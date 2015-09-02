@@ -100,7 +100,7 @@
     <Compile Include="CameraCaptureUIPage.xaml.cs">
       <DependentUpon>CameraCaptureUIPage.xaml</DependentUpon>
     </Compile>
-    <Compile Include="LabeledImage.cs" />
+    <Compile Include="PageOrientation.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
