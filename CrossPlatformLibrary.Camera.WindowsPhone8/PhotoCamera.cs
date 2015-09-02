@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Threading.Tasks;
+using CrossPlatformLibraryCameraControl;
 using Microsoft.Phone.Tasks;
 using Windows.Storage;
 
@@ -37,7 +38,8 @@ namespace CrossPlatformLibrary.Camera
 
             options.VerifyOptions();
 
-            var capture = new CameraCaptureUI(this.CameraFacingDirection);
+            //var capture = new CameraCaptureUI(this.CameraFacingDirection);
+            var capture = new ViewFinder(this.CameraFacingDirection);
             var result = await capture.CaptureFileAsync();
             if (result == null)
             {

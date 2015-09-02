@@ -1,0 +1,35 @@
+﻿<phone:PhoneApplicationPage
+    x:Class="CrossPlatformLibrary.Camera.ViewFinderPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:phone="clr-namespace:Microsoft.Phone.Controls;assembly=Microsoft.Phone"
+    xmlns:shell="clr-namespace:Microsoft.Phone.Shell;assembly=Microsoft.Phone"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:camera="clr-namespace:CrossPlatformLibrary.Camera"
+    xmlns:crossPlatformLibraryCameraControl="clr-namespace:CrossPlatformLibraryCameraControl"
+    mc:Ignorable="d"
+    FontFamily="{StaticResource PhoneFontFamilyNormal}"
+    FontSize="{StaticResource PhoneFontSizeNormal}"
+    Foreground="{StaticResource PhoneForegroundBrush}"
+    SupportedOrientations="PortraitOrLandscape" Orientation="Portrait"
+    shell:SystemTray.IsVisible="False">
+
+    <!--LayoutRoot is the root grid where all page content is placed-->
+    <Grid x:Name="LayoutRoot" Background="Transparent">
+        <!--<Grid.RowDefinitions>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <Grid>
+            <crossPlatformLibraryCameraControl:ViewFinder Name="view"/>
+        </Grid>-->
+  </Grid>
+    <phone:PhoneApplicationPage.ApplicationBar >
+        <shell:ApplicationBar IsVisible="True" IsMenuEnabled="True" x:Name="AppBar">
+            <shell:ApplicationBarIconButton x:Name="switchCamera" Text="switch " IconUri="/Assets/appbar.camera.switch.png"  Click="ToggleCameraButtonTapped"/>
+            <shell:ApplicationBarIconButton  Text="capture" IconUri="/Assets/feature.camera.png" Click="TakePictureButtonTapped"  />
+
+        </shell:ApplicationBar>
+    </phone:PhoneApplicationPage.ApplicationBar>
+</phone:PhoneApplicationPage>

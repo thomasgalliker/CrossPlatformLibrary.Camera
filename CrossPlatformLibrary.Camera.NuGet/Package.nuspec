@@ -2,7 +2,7 @@
 <package xmlns="http://schemas.microsoft.com/packaging/2012/06/nuspec.xsd">
   <metadata>
     <id>CrossPlatformLibrary.Camera</id>
-    <version>1.0.57-alpha</version>
+    <version>1.0.59-alpha</version>
     <title>CrossPlatformLibrary.Camera</title>
     <authors>Thomas Galliker</authors>
     <licenseUrl>http://opensource.org/licenses/Apache-2.0</licenseUrl>
@@ -86,6 +86,8 @@
     <!--Windows Phone 8-->
     <file src="..\CrossPlatformLibrary.Camera\bin\Release\CrossPlatformLibrary.Camera.dll" target="lib\wp8\CrossPlatformLibrary.Camera.dll" />
     <file src="..\CrossPlatformLibrary.Camera.WindowsPhone8\Bin\Release\CrossPlatformLibrary.Camera.Platform.dll" target="lib\wp8\CrossPlatformLibrary.Camera.Platform.dll" />
+    <file src="..\CrossPlatformLibrary.Camera.WindowsPhone8\Assets\appbar.camera.switch.png" target="content\wp8\Assets\appbar.camera.switch.png" />
+    <file src="..\CrossPlatformLibrary.Camera.WindowsPhone8\Assets\feature.camera.png" target="content\wp8\Assets\feature.camera.png" />
 
     <!--Windows Phone 8.1-->
     <file src="..\CrossPlatformLibrary.Camera\bin\Release\CrossPlatformLibrary.Camera.dll" target="lib\wpa81\CrossPlatformLibrary.Camera.dll" />

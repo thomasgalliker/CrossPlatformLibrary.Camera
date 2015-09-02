@@ -307,8 +307,8 @@ namespace CrossPlatformLibrary.Camera
         }
 
         private const short WaitForClickLoopLength = 1000;
-
         private bool StopFlag;
+        
         private StorageFile file;
         private int m_orientationAngle;
 

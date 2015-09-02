@@ -22,10 +22,7 @@
         </Rectangle>
 
         <StackPanel Grid.Row="1" Background="Transparent">
-            <controls:RoundButton x:Name="ShutterButton" Content="Selfify!" ImageSource="Images/camera.png" Height="72" Width="200" Click="OnShutterButtonClicked">
-                <!--<Button.RenderTransform>
-                    <TranslateTransform x:Name="TranslateTransform" X="500" />
-                </Button.RenderTransform>-->
+            <controls:RoundButton x:Name="ShutterButton" Content="Selfify!" ImageSource="Assets/feature.camera.png" Height="72" Width="200" Click="OnShutterButtonClicked">
             </controls:RoundButton>
         </StackPanel >
     </Grid>
