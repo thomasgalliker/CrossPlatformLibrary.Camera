@@ -27,6 +27,11 @@ namespace Camera2Basic
 {
     public class Camera2BasicFragment : Fragment, View.IOnClickListener
     {
+        internal const string ExtraPath = "path";
+        internal const string ExtraLocation = "location";
+        internal const string ExtraType = "type";
+        internal const string ExtraId = "id";
+
         private static readonly SparseIntArray ORIENTATIONS = new SparseIntArray();
         // An AutoFitTextureView for camera preview
         private AutoFitTextureView mTextureView;
@@ -42,6 +47,17 @@ namespace Camera2Basic
 
         // TextureView.ISurfaceTextureListener handles several lifecycle events on a TextureView
         private Camera2BasicSurfaceTextureListener mSurfaceTextureListener;
+
+        internal static event EventHandler<MediaPickedEventArgs> MediaPicked;
+
+        internal void OnMediaPicked(MediaPickedEventArgs e)
+        {
+            var picked = MediaPicked;
+            if (picked != null)
+            {
+                picked(null, e);
+            }
+        }
 
         private class Camera2BasicSurfaceTextureListener : Object, TextureView.ISurfaceTextureListener
         {
@@ -189,6 +205,10 @@ namespace Camera2Basic
                     if (activity != null)
                     {
                         Toast.MakeText(activity, "Saved: " + this.File.ToString(), ToastLength.Short).Show();
+                        this.Fragment.OnMediaPicked(new MediaPickedEventArgs(0, false, new MediaFile(
+                            this.File.AbsolutePath,
+                            () => { return System.IO.File.OpenRead(this.File.AbsolutePath); }, false)));
+
                         this.Fragment.StartPreview();
                     }
                 }
@@ -473,11 +493,11 @@ namespace Camera2Basic
                 captureBuilder.Set(CaptureRequest.JpegOrientation, new Integer(ORIENTATIONS.Get((int)rotation)));
 
                 // Output file
-                File file = new File(activity.GetExternalFilesDir(null), "pic.jpg");
+                File file = new File(activity.GetExternalFilesDir(null), "DEMO_"+DateTime.Now.ToString("yyyyMMdd_HHmmss") + ".jpg");
 
                 // This listener is called when an image is ready in ImageReader 
                 // Right click on ImageAvailableListener in your IDE and go to its definition
-                ImageAvailableListener readerListener = new ImageAvailableListener() { File = file };
+                ImageAvailableListener readerListener = new ImageAvailableListener { File = file };
 
                 // We create a Handler since we want to handle the resulting JPEG in a background thread
                 HandlerThread thread = new HandlerThread("CameraPicture");
@@ -488,7 +508,7 @@ namespace Camera2Basic
                 //This listener is called when the capture is completed
                 // Note that the JPEG data is not available in this listener, but in the ImageAvailableListener we created above
                 // Right click on CameraCaptureListener in your IDE and go to its definition
-                CameraCaptureListener captureListener = new CameraCaptureListener() { Fragment = this, File = file };
+                CameraCaptureListener captureListener = new CameraCaptureListener { Fragment = this, File = file };
 
                 this.mCameraDevice.CreateCaptureSession(
                     outputSurfaces,

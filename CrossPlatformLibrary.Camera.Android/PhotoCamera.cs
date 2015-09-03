@@ -3,13 +3,15 @@ using System.Threading;
 using System.Threading.Tasks;
 
 using Android.Content;
-using Android.Provider;
+using Android.Runtime;
+
+using Camera2Basic;
 
 using CrossPlatformLibrary.Utils;
 
 namespace CrossPlatformLibrary.Camera
 {
-    [Android.Runtime.Preserve(AllMembers = true)]
+    [Preserve(AllMembers = true)]
     public class PhotoCamera : IPhotoCamera
     {
         private readonly Context context;
@@ -45,65 +47,58 @@ namespace CrossPlatformLibrary.Camera
 
             options.VerifyOptions();
 
-            return await this.TakeMediaAsync("image/*", MediaStore.ActionImageCapture, options);
+            return await this.TakeMediaAsync(options);
         }
 
-        private Task<MediaFile> TakeMediaAsync(string type, string action, StoreMediaOptions options)
+        private Task<MediaFile> TakeMediaAsync(StoreMediaOptions options)
         {
             int id = this.GetRequestId();
 
             var ntcs = new TaskCompletionSource<MediaFile>(id);
             if (Interlocked.CompareExchange(ref this.completionSource, ntcs, null) != null)
+            {
                 throw new InvalidOperationException("Only one operation can be active at a time");
+            }
 
-            this.context.StartActivity(this.CreateMediaIntent(id, type, action, options));
+            var cameraActivityIntent = this.CreateCameraIntent(options);
+            this.context.StartActivity(cameraActivityIntent);
 
             EventHandler<MediaPickedEventArgs> handler = null;
             handler = (s, e) =>
-            {
-                var tcs = Interlocked.Exchange(ref this.completionSource, null);
+                {
+                    var tcs = Interlocked.Exchange(ref this.completionSource, null);
 
-                MediaPickerActivity.MediaPicked -= handler;
+                    Camera2BasicFragment.MediaPicked -= handler;
 
-                if (e.RequestId != id)
-                    return;
+                    if (e.RequestId != id)
+                    {
+                        return;
+                    }
 
-                if (e.Error != null)
-                    tcs.SetResult(null);
-                else if (e.IsCanceled)
-                    tcs.SetResult(null);
-                else
-                    tcs.SetResult(e.Media);
-            };
+                    if (e.Error != null)
+                    {
+                        tcs.SetResult(null);
+                    }
+                    else if (e.IsCanceled)
+                    {
+                        tcs.SetResult(null);
+                    }
+                    else
+                    {
+                        tcs.SetResult(e.Media);
+                    }
+                };
 
-            MediaPickerActivity.MediaPicked += handler;
+            Camera2BasicFragment.MediaPicked += handler;
 
             return ntcs.Task;
         }
 
-        private Intent CreateMediaIntent(int id, string type, string action, StoreMediaOptions options, bool tasked = true)
+        private Intent CreateCameraIntent(StoreMediaOptions options)
         {
-            Intent pickerIntent = new Intent(this.context, typeof(MediaPickerActivity));
-            pickerIntent.PutExtra(MediaPickerActivity.ExtraId, id);
-            pickerIntent.PutExtra(MediaPickerActivity.ExtraType, type);
-            pickerIntent.PutExtra(MediaPickerActivity.ExtraAction, action);
-            pickerIntent.PutExtra(MediaPickerActivity.ExtraTasked, tasked);
+            Intent pickerIntent = new Intent(this.context, typeof(CameraActivity));
+            pickerIntent.PutExtra(Camera2BasicFragment.ExtraPath, options.Directory);
 
-            if (options != null)
-            {
-                pickerIntent.PutExtra(MediaPickerActivity.ExtraPath, options.Directory);
-                pickerIntent.PutExtra(MediaStore.Images.ImageColumns.Title, options.Name);
-
-                var vidOptions = (options as StoreVideoOptions);
-                if (vidOptions != null)
-                {
-                    pickerIntent.PutExtra(MediaStore.ExtraDurationLimit, (int)vidOptions.DesiredLength.TotalSeconds);
-                    pickerIntent.PutExtra(MediaStore.ExtraVideoQuality, (int)vidOptions.Quality);
-                }
-            }
-
-           
-            //pickerIntent.SetFlags(ActivityFlags.ClearTop);
             pickerIntent.SetFlags(ActivityFlags.NewTask);
             return pickerIntent;
         }
@@ -112,9 +107,13 @@ namespace CrossPlatformLibrary.Camera
         {
             int id = this.requestId;
             if (this.requestId == Int32.MaxValue)
+            {
                 this.requestId = 0;
+            }
             else
+            {
                 this.requestId++;
+            }
 
             return id;
         }

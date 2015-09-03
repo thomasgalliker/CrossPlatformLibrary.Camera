@@ -1,4 +1,5 @@
-﻿using Android.App;
+﻿
+using Android.App;
 using Android.OS;
 
 using CrossPlatformLibrary.Camera;
