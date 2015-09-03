@@ -209,14 +209,14 @@ namespace CrossPlatformLibraryCameraControl // DO NOT RENAME THIS NAMESPACE // T
             }
         }
 
-        private void RootFrame_Navigating(object sender, NavigatingCancelEventArgs e)
-        {
-            if (this.captureDevice != null)
-            {
-                this.captureDevice.Dispose();
-                this.captureDevice = null;
-            }
-        }
+        ////private void RootFrame_Navigating(object sender, NavigatingCancelEventArgs e)
+        ////{
+        ////    if (this.captureDevice != null)
+        ////    {
+        ////        this.captureDevice.Dispose();
+        ////        this.captureDevice = null;
+        ////    }
+        ////}
 
         private void OnOrientationChanged(object sender, OrientationChangedEventArgs e)
         {

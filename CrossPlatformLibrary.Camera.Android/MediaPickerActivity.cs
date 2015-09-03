@@ -10,6 +10,8 @@ using Android.OS;
 using Android.Provider;
 using Android.Runtime;
 
+using CrossPlatformLibrary.Utils;
+
 using Environment = Android.OS.Environment;
 using FileNotFoundException = Java.IO.FileNotFoundException;
 using Uri = Android.Net.Uri;
@@ -474,10 +476,7 @@ namespace CrossPlatformLibrary.Camera
     {
         public MediaPickedEventArgs(int id, Exception error)
         {
-            if (error == null)
-            {
-                throw new ArgumentNullException("error");
-            }
+            Guard.ArgumentNotNull(() => error);
 
             this.RequestId = id;
             this.Error = error;
@@ -487,9 +486,9 @@ namespace CrossPlatformLibrary.Camera
         {
             this.RequestId = id;
             this.IsCanceled = isCanceled;
-            if (!this.IsCanceled && media == null)
+            if (!this.IsCanceled)
             {
-                throw new ArgumentNullException("media");
+                Guard.ArgumentNotNull(() => media);
             }
 
             this.Media = media;
