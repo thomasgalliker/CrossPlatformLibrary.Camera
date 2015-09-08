@@ -1,17 +1,20 @@
-﻿
-using Android.App;
+﻿using Android.App;
 using Android.OS;
+using Android.Runtime;
+using Android.Views;
 
-using CrossPlatformLibrary.Camera;
-
-namespace Camera2Basic
+namespace CrossPlatformLibrary.Camera.ViewFinder
 {
-    [Activity(Label = "Camera2Basic", MainLauncher = true, Icon = "@drawable/icon")]
+    [Activity]
+    [Preserve(AllMembers = true)]
     public class CameraActivity : Activity
     {
         protected override void OnCreate(Bundle bundle)
         {
             base.OnCreate(bundle);
+
+            this.Window.AddFlags(WindowManagerFlags.Fullscreen); //to hide
+
             this.ActionBar.Hide();
             this.SetContentView(Resource.Layout.activity_camera);
 

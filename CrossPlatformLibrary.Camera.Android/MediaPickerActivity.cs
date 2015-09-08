@@ -49,10 +49,6 @@ namespace CrossPlatformLibrary.Camera
 
         private bool tasked;
 
-        /// <summary>
-        ///     OnSaved
-        /// </summary>
-        /// <param name="outState"></param>
         protected override void OnSaveInstanceState(Bundle outState)
         {
             outState.PutBoolean("ran", true);
@@ -73,10 +69,6 @@ namespace CrossPlatformLibrary.Camera
             base.OnSaveInstanceState(outState);
         }
 
-        /// <summary>
-        ///     OnCreate
-        /// </summary>
-        /// <param name="savedInstanceState"></param>
         protected override void OnCreate(Bundle savedInstanceState)
         {
             base.OnCreate(savedInstanceState);

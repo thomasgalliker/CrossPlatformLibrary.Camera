@@ -6,7 +6,6 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:cameraControls="using:CameraControls"
     mc:Ignorable="d"
-    cameraControls:PageOrientation.SupportedOrientations="Landscape,Portrait,LandscapeFlipped,PortraitFlipped"
     Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
 
     <Grid/>

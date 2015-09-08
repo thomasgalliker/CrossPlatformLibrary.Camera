@@ -23,6 +23,12 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CrossPlatformLibrary.Camera
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CrossPlatformLibrary.Camera.WindowsPhone81.CameraControls", "WindowsPhone81CameraCaptureUI\CrossPlatformLibrary.Camera.WindowsPhone81.CameraControls.csproj", "{57F3314C-8D42-4140-B412-B933C2B3A724}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{C60655A6-AF6B-4F56-8E1C-8A2D39868181}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Samples", "Samples", "{D184DC28-4A4A-49F8-916A-BE9D94509E10}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CameraSample.Android", "Samples\CameraSample.Android.csproj", "{C759B4E2-0DE6-4E2F-B743-036F3A3A928B}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -143,12 +149,25 @@ Global
 		{57F3314C-8D42-4140-B412-B933C2B3A724}.Release|x64.ActiveCfg = Release|Any CPU
 		{57F3314C-8D42-4140-B412-B933C2B3A724}.Release|x86.ActiveCfg = Release|x86
 		{57F3314C-8D42-4140-B412-B933C2B3A724}.Release|x86.Build.0 = Release|x86
+		{C759B4E2-0DE6-4E2F-B743-036F3A3A928B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C759B4E2-0DE6-4E2F-B743-036F3A3A928B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C759B4E2-0DE6-4E2F-B743-036F3A3A928B}.Debug|Any CPU.Deploy.0 = Debug|Any CPU
+		{C759B4E2-0DE6-4E2F-B743-036F3A3A928B}.Debug|ARM.ActiveCfg = Debug|Any CPU
+		{C759B4E2-0DE6-4E2F-B743-036F3A3A928B}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{C759B4E2-0DE6-4E2F-B743-036F3A3A928B}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{C759B4E2-0DE6-4E2F-B743-036F3A3A928B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C759B4E2-0DE6-4E2F-B743-036F3A3A928B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C759B4E2-0DE6-4E2F-B743-036F3A3A928B}.Release|Any CPU.Deploy.0 = Release|Any CPU
+		{C759B4E2-0DE6-4E2F-B743-036F3A3A928B}.Release|ARM.ActiveCfg = Release|Any CPU
+		{C759B4E2-0DE6-4E2F-B743-036F3A3A928B}.Release|x64.ActiveCfg = Release|Any CPU
+		{C759B4E2-0DE6-4E2F-B743-036F3A3A928B}.Release|x86.ActiveCfg = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{2CF5E868-1098-4C6D-9001-27D8DC0D87BE} = {B5AEA046-0E87-4A7B-8F11-80B6BDDA1F2A}
+		{C759B4E2-0DE6-4E2F-B743-036F3A3A928B} = {D184DC28-4A4A-49F8-916A-BE9D94509E10}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		VisualSVNWorkingCopyRoot = .

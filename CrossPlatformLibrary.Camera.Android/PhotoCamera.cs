@@ -5,8 +5,8 @@ using System.Threading.Tasks;
 using Android.Content;
 using Android.Runtime;
 
-using Camera2Basic;
 
+using CrossPlatformLibrary.Camera.ViewFinder;
 using CrossPlatformLibrary.Utils;
 
 namespace CrossPlatformLibrary.Camera
@@ -97,7 +97,7 @@ namespace CrossPlatformLibrary.Camera
         private Intent CreateCameraIntent(StoreMediaOptions options)
         {
             Intent pickerIntent = new Intent(this.context, typeof(CameraActivity));
-            pickerIntent.PutExtra(Camera2BasicFragment.ExtraPath, options.Directory);
+            pickerIntent.PutExtra(Camera2BasicFragment.ExtraPath, options.Directory); // NAME?
 
             pickerIntent.SetFlags(ActivityFlags.NewTask);
             return pickerIntent;

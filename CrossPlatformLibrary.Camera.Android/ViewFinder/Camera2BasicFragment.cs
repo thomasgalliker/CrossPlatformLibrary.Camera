@@ -8,11 +8,14 @@ using Android.Hardware.Camera2;
 using Android.Hardware.Camera2.Params;
 using Android.Media;
 using Android.OS;
+using Android.Runtime;
 using Android.Util;
 using Android.Views;
 using Android.Widget;
 
-using CrossPlatformLibrary.Camera;
+using Camera2Basic;
+
+using CrossPlatformLibrary.Tracing;
 
 using Java.IO;
 using Java.Lang;
@@ -22,9 +25,11 @@ using Debug = System.Diagnostics.Debug;
 using Math = System.Math;
 using Object = Java.Lang.Object;
 using Orientation = Android.Content.Res.Orientation;
+using Uri = Android.Net.Uri;
 
-namespace Camera2Basic
+namespace CrossPlatformLibrary.Camera.ViewFinder
 {
+    [Preserve(AllMembers = true)]
     public class Camera2BasicFragment : Fragment, View.IOnClickListener
     {
         internal const string ExtraPath = "path";
@@ -32,46 +37,37 @@ namespace Camera2Basic
         internal const string ExtraType = "type";
         internal const string ExtraId = "id";
 
-        private static readonly SparseIntArray ORIENTATIONS = new SparseIntArray();
+        private static readonly SparseIntArray Orientations = new SparseIntArray();
         // An AutoFitTextureView for camera preview
-        private AutoFitTextureView mTextureView;
+        private AutoFitTextureView autoFitTextureView;
 
         // A CameraRequest.Builder for camera preview
-        private CaptureRequest.Builder mPreviewBuilder;
+        private CaptureRequest.Builder previewBuilder;
 
         // A CameraCaptureSession for camera preview
-        private CameraCaptureSession mPreviewSession;
+        private CameraCaptureSession previewSession;
 
         // A reference to the opened CameraDevice
-        private CameraDevice mCameraDevice;
+        private CameraDevice cameraDevice;
 
         // TextureView.ISurfaceTextureListener handles several lifecycle events on a TextureView
         private Camera2BasicSurfaceTextureListener mSurfaceTextureListener;
 
         internal static event EventHandler<MediaPickedEventArgs> MediaPicked;
 
-        internal void OnMediaPicked(MediaPickedEventArgs e)
-        {
-            var picked = MediaPicked;
-            if (picked != null)
-            {
-                picked(null, e);
-            }
-        }
-
         private class Camera2BasicSurfaceTextureListener : Object, TextureView.ISurfaceTextureListener
         {
-            private readonly Camera2BasicFragment Fragment;
+            private readonly Camera2BasicFragment fragment;
 
             public Camera2BasicSurfaceTextureListener(Camera2BasicFragment fragment)
             {
-                this.Fragment = fragment;
+                this.fragment = fragment;
             }
 
             public void OnSurfaceTextureAvailable(SurfaceTexture surface, int width, int height)
             {
-                this.Fragment.ConfigureTransform(width, height);
-                this.Fragment.StartPreview();
+                this.fragment.ConfigureTransform(width, height);
+                this.fragment.StartPreview();
             }
 
             public bool OnSurfaceTextureDestroyed(SurfaceTexture surface)
@@ -81,8 +77,8 @@ namespace Camera2Basic
 
             public void OnSurfaceTextureSizeChanged(SurfaceTexture surface, int width, int height)
             {
-                this.Fragment.ConfigureTransform(width, height);
-                this.Fragment.StartPreview();
+                this.fragment.ConfigureTransform(width, height);
+                this.fragment.StartPreview();
             }
 
             public void OnSurfaceTextureUpdated(SurfaceTexture surface)
@@ -91,7 +87,7 @@ namespace Camera2Basic
         }
 
         // The size of the camera preview
-        private Size mPreviewSize;
+        private Size previewSize;
 
         // True if the app is currently trying to open the camera
         private bool mOpeningCamera;
@@ -107,7 +103,7 @@ namespace Camera2Basic
             {
                 if (this.Fragment != null)
                 {
-                    this.Fragment.mCameraDevice = camera;
+                    this.Fragment.cameraDevice = camera;
                     this.Fragment.StartPreview();
                     this.Fragment.mOpeningCamera = false;
                 }
@@ -118,7 +114,7 @@ namespace Camera2Basic
                 if (this.Fragment != null)
                 {
                     camera.Close();
-                    this.Fragment.mCameraDevice = null;
+                    this.Fragment.cameraDevice = null;
                     this.Fragment.mOpeningCamera = false;
                 }
             }
@@ -128,7 +124,7 @@ namespace Camera2Basic
                 camera.Close();
                 if (this.Fragment != null)
                 {
-                    this.Fragment.mCameraDevice = null;
+                    this.Fragment.cameraDevice = null;
                     Activity activity = this.Fragment.Activity;
                     this.Fragment.mOpeningCamera = false;
                     if (activity != null)
@@ -204,14 +200,21 @@ namespace Camera2Basic
                     Activity activity = this.Fragment.Activity;
                     if (activity != null)
                     {
-                        Toast.MakeText(activity, "Saved: " + this.File.ToString(), ToastLength.Short).Show();
-                        this.Fragment.OnMediaPicked(new MediaPickedEventArgs(0, false, new MediaFile(
-                            this.File.AbsolutePath,
-                            () => { return System.IO.File.OpenRead(this.File.AbsolutePath); }, false)));
+                        var newMediaFile = new MediaFile(this.File.AbsolutePath, () => { return System.IO.File.OpenRead(this.File.AbsolutePath); });
+                        this.Fragment.OnMediaPicked(new MediaPickedEventArgs(0, false, newMediaFile));
 
                         this.Fragment.StartPreview();
                     }
                 }
+            }
+        }
+
+        private void OnMediaPicked(MediaPickedEventArgs e)
+        {
+            var picked = MediaPicked;
+            if (picked != null)
+            {
+                picked(null, e);
             }
         }
 
@@ -239,20 +242,37 @@ namespace Camera2Basic
             }
         }
 
+        private Uri path;
+        private ITracer tracer = Tracer.Create<Camera2BasicFragment>();
+
         public override void OnCreate(Bundle savedInstanceState)
         {
             base.OnCreate(savedInstanceState);
-            this.mStateListener = new CameraStateListener() { Fragment = this };
+
+            Bundle b = (savedInstanceState ?? this.Activity.Intent.Extras);
+            this.path = Uri.Parse(b.GetString(ExtraPath));
+
+            this.mStateListener = new CameraStateListener { Fragment = this };
             this.mSurfaceTextureListener = new Camera2BasicSurfaceTextureListener(this);
-            ORIENTATIONS.Append((int)SurfaceOrientation.Rotation0, 90);
-            ORIENTATIONS.Append((int)SurfaceOrientation.Rotation90, 0);
-            ORIENTATIONS.Append((int)SurfaceOrientation.Rotation180, 270);
-            ORIENTATIONS.Append((int)SurfaceOrientation.Rotation270, 180);
+            Orientations.Append((int)SurfaceOrientation.Rotation0, 90);
+            Orientations.Append((int)SurfaceOrientation.Rotation90, 0);
+            Orientations.Append((int)SurfaceOrientation.Rotation180, 270);
+            Orientations.Append((int)SurfaceOrientation.Rotation270, 180);
+        }
+
+        public override void OnSaveInstanceState(Bundle outState)
+        {
+            if (this.path != null)
+            {
+                outState.PutString(ExtraPath, this.path.Path);
+            }
+
+            base.OnSaveInstanceState(outState);
         }
 
         public static Camera2BasicFragment NewInstance()
         {
-            Camera2BasicFragment fragment = new Camera2BasicFragment();
+            var fragment = new Camera2BasicFragment();
             fragment.RetainInstance = true;
             return fragment;
         }
@@ -264,8 +284,8 @@ namespace Camera2Basic
 
         public override void OnViewCreated(View view, Bundle savedInstanceState)
         {
-            this.mTextureView = (AutoFitTextureView)view.FindViewById(Resource.Id.texture);
-            this.mTextureView.SurfaceTextureListener = this.mSurfaceTextureListener;
+            this.autoFitTextureView = (AutoFitTextureView)view.FindViewById(Resource.Id.texture);
+            this.autoFitTextureView.SurfaceTextureListener = this.mSurfaceTextureListener;
             view.FindViewById(Resource.Id.picture).SetOnClickListener(this);
         }
 
@@ -278,86 +298,85 @@ namespace Camera2Basic
         public override void OnPause()
         {
             base.OnPause();
-            if (this.mCameraDevice != null)
+            if (this.cameraDevice != null)
             {
-                this.mCameraDevice.Close();
-                this.mCameraDevice = null;
+                this.cameraDevice.Close();
+                this.cameraDevice = null;
             }
         }
 
         // Opens a CameraDevice. The result is listened to by 'mStateListener'.
         private void OpenCamera()
         {
-            Activity activity = this.Activity;
+            var activity = this.Activity;
             if (activity == null || activity.IsFinishing || this.mOpeningCamera)
             {
                 return;
             }
             this.mOpeningCamera = true;
-            CameraManager manager = (CameraManager)activity.GetSystemService(Context.CameraService);
+            CameraManager cameraManager = (CameraManager)activity.GetSystemService(Context.CameraService);
             try
             {
-                string cameraId = manager.GetCameraIdList()[0];
+                string cameraId = cameraManager.GetCameraIdList()[0];
 
                 // To get a list of available sizes of camera preview, we retrieve an instance of
                 // StreamConfigurationMap from CameraCharacteristics
-                CameraCharacteristics characteristics = manager.GetCameraCharacteristics(cameraId);
+                CameraCharacteristics characteristics = cameraManager.GetCameraCharacteristics(cameraId);
                 StreamConfigurationMap map = (StreamConfigurationMap)characteristics.Get(CameraCharacteristics.ScalerStreamConfigurationMap);
-                this.mPreviewSize = map.GetOutputSizes(Class.FromType(typeof(SurfaceTexture)))[0];
+                this.previewSize = map.GetOutputSizes(Class.FromType(typeof(SurfaceTexture)))[0];
                 Orientation orientation = this.Resources.Configuration.Orientation;
                 if (orientation == Orientation.Landscape)
                 {
-                    this.mTextureView.SetAspectRatio(this.mPreviewSize.Width, this.mPreviewSize.Height);
+                    this.autoFitTextureView.SetAspectRatio(this.previewSize.Width, this.previewSize.Height);
                 }
                 else
                 {
-                    this.mTextureView.SetAspectRatio(this.mPreviewSize.Height, this.mPreviewSize.Width);
+                    this.autoFitTextureView.SetAspectRatio(this.previewSize.Height, this.previewSize.Width);
                 }
 
                 // We are opening the camera with a listener. When it is ready, OnOpened of mStateListener is called.
-                manager.OpenCamera(cameraId, this.mStateListener, null);
+                cameraManager.OpenCamera(cameraId, this.mStateListener, null);
             }
-            catch (CameraAccessException ex)
+            catch (CameraAccessException caex)
             {
+                this.tracer.Exception(caex, "Cannot access the camera.");
                 Toast.MakeText(activity, "Cannot access the camera.", ToastLength.Short).Show();
                 this.Activity.Finish();
             }
-            catch (NullPointerException)
+            catch (NullPointerException npex)
             {
+                this.tracer.Exception(npex, "This device doesn't support Camera2 API.");
+
                 var dialog = new ErrorDialog();
                 dialog.Show(this.FragmentManager, "dialog");
             }
         }
 
-        /// <summary>
-        ///     Starts the camera previe
-        /// </summary>
         private void StartPreview()
         {
-            if (this.mCameraDevice == null || !this.mTextureView.IsAvailable || this.mPreviewSize == null)
+            if (this.cameraDevice == null || !this.autoFitTextureView.IsAvailable || this.previewSize == null)
             {
                 return;
             }
             try
             {
-                SurfaceTexture texture = this.mTextureView.SurfaceTexture;
+                SurfaceTexture texture = this.autoFitTextureView.SurfaceTexture;
                 Debug.Assert(texture != null);
 
                 // We configure the size of the default buffer to be the size of the camera preview we want
-                texture.SetDefaultBufferSize(this.mPreviewSize.Width, this.mPreviewSize.Height);
+                texture.SetDefaultBufferSize(this.previewSize.Width, this.previewSize.Height);
 
                 // This is the output Surface we need to start the preview
                 Surface surface = new Surface(texture);
 
                 // We set up a CaptureRequest.Builder with the output Surface
-                this.mPreviewBuilder = this.mCameraDevice.CreateCaptureRequest(CameraTemplate.Preview);
-                this.mPreviewBuilder.AddTarget(surface);
+                this.previewBuilder = this.cameraDevice.CreateCaptureRequest(CameraTemplate.Preview);
+                this.previewBuilder.AddTarget(surface);
 
                 // Here, we create a CameraCaptureSession for camera preview.
-                this.mCameraDevice.CreateCaptureSession(
-                    new List<Surface>() { surface },
-                    new CameraCaptureStateListener()
-                        {
+                this.cameraDevice.CreateCaptureSession(
+                    new List<Surface> { surface },
+                    new CameraCaptureStateListener {
                             OnConfigureFailedAction = (CameraCaptureSession session) =>
                                 {
                                     Activity activity = this.Activity;
@@ -368,7 +387,7 @@ namespace Camera2Basic
                                 },
                             OnConfiguredAction = (CameraCaptureSession session) =>
                                 {
-                                    this.mPreviewSession = session;
+                                    this.previewSession = session;
                                     this.UpdatePreview();
                                 }
                         },
@@ -385,7 +404,7 @@ namespace Camera2Basic
         /// </summary>
         private void UpdatePreview()
         {
-            if (this.mCameraDevice == null)
+            if (this.cameraDevice == null)
             {
                 return;
             }
@@ -393,13 +412,13 @@ namespace Camera2Basic
             try
             {
                 // The camera preview can be run in a background thread. This is a Handler for the camere preview
-                this.SetUpCaptureRequestBuilder(this.mPreviewBuilder);
+                this.SetUpCaptureRequestBuilder(this.previewBuilder);
                 HandlerThread thread = new HandlerThread("CameraPreview");
                 thread.Start();
                 Handler backgroundHandler = new Handler(thread.Looper);
 
                 // Finally, we start displaying the camera preview
-                this.mPreviewSession.SetRepeatingRequest(this.mPreviewBuilder.Build(), null, backgroundHandler);
+                this.previewSession.SetRepeatingRequest(this.previewBuilder.Build(), null, backgroundHandler);
             }
             catch (CameraAccessException ex)
             {
@@ -413,63 +432,66 @@ namespace Camera2Basic
         /// <param name="builder">Builder.</param>
         private void SetUpCaptureRequestBuilder(CaptureRequest.Builder builder)
         {
-            // In this sample, w just let the camera device pick the automatic settings
+            // In this sample, we just let the camera device pick the automatic settings
             builder.Set(CaptureRequest.ControlMode, new Integer((int)ControlMode.Auto));
         }
 
         /// <summary>
-        ///     Configures the necessary transformation to mTextureView.
+        ///     Configures the necessary transformation to autoFitTextureView.
         ///     This method should be called after the camera preciew size is determined in openCamera, and also the size of
-        ///     mTextureView is fixed
+        ///     autoFitTextureView is fixed
         /// </summary>
-        /// <param name="viewWidth">The width of mTextureView</param>
-        /// <param name="viewHeight">VThe height of mTextureView</param>
+        /// <param name="viewWidth">The width of autoFitTextureView</param>
+        /// <param name="viewHeight">VThe height of autoFitTextureView</param>
         private void ConfigureTransform(int viewWidth, int viewHeight)
         {
             Activity activity = this.Activity;
-            if (this.mTextureView == null || this.mPreviewSize == null || activity == null)
+            if (this.autoFitTextureView == null || this.previewSize == null || activity == null)
             {
+                this.tracer.Debug("ConfigureTransform: Could not perform transformation.");
                 return;
             }
 
             SurfaceOrientation rotation = activity.WindowManager.DefaultDisplay.Rotation;
             Matrix matrix = new Matrix();
             RectF viewRect = new RectF(0, 0, viewWidth, viewHeight);
-            RectF bufferRect = new RectF(0, 0, this.mPreviewSize.Width, this.mPreviewSize.Height);
+            RectF bufferRect = new RectF(0, 0, this.previewSize.Width, this.previewSize.Height);
             float centerX = viewRect.CenterX();
             float centerY = viewRect.CenterY();
             if (rotation == SurfaceOrientation.Rotation90 || rotation == SurfaceOrientation.Rotation270)
             {
                 bufferRect.Offset(centerX - bufferRect.CenterX(), centerY - bufferRect.CenterY());
                 matrix.SetRectToRect(viewRect, bufferRect, Matrix.ScaleToFit.Fill);
-                float scale = Math.Max((float)viewHeight / this.mPreviewSize.Height, (float)viewWidth / this.mPreviewSize.Width);
+                float scale = Math.Max((float)viewHeight / this.previewSize.Height, (float)viewWidth / this.previewSize.Width);
+                this.tracer.Debug("ConfigureTransform: scale={0}", scale);
+                this.tracer.Debug("ConfigureTransform: centerX={0}", centerX);
+                this.tracer.Debug("ConfigureTransform: centerY={0}", centerY);
                 matrix.PostScale(scale, scale, centerX, centerY);
                 matrix.PostRotate(90 * ((int)rotation - 2), centerX, centerY);
             }
-            this.mTextureView.SetTransform(matrix);
+            this.autoFitTextureView.SetTransform(matrix);
         }
 
-        /// <summary>
-        ///     Takes a picture.
-        /// </summary>
         private void TakePicture()
         {
             try
             {
                 Activity activity = this.Activity;
-                if (activity == null || this.mCameraDevice == null)
+                if (activity == null || this.cameraDevice == null)
                 {
                     return;
                 }
-                CameraManager manager = (CameraManager)activity.GetSystemService(Context.CameraService);
+
+                var cameraManager = (CameraManager)activity.GetSystemService(Context.CameraService);
 
                 // Pick the best JPEG size that can be captures with this CameraDevice
-                CameraCharacteristics characteristics = manager.GetCameraCharacteristics(this.mCameraDevice.Id);
+                CameraCharacteristics characteristics = cameraManager.GetCameraCharacteristics(this.cameraDevice.Id);
                 Size[] jpegSizes = null;
                 if (characteristics != null)
                 {
                     jpegSizes = ((StreamConfigurationMap)characteristics.Get(CameraCharacteristics.ScalerStreamConfigurationMap)).GetOutputSizes((int)ImageFormatType.Jpeg);
                 }
+
                 int width = 640;
                 int height = 480;
                 if (jpegSizes != null && jpegSizes.Length > 0)
@@ -483,21 +505,24 @@ namespace Camera2Basic
                 ImageReader reader = ImageReader.NewInstance(width, height, ImageFormatType.Jpeg, 1);
                 List<Surface> outputSurfaces = new List<Surface>(2);
                 outputSurfaces.Add(reader.Surface);
-                outputSurfaces.Add(new Surface(this.mTextureView.SurfaceTexture));
+                outputSurfaces.Add(new Surface(this.autoFitTextureView.SurfaceTexture));
 
-                CaptureRequest.Builder captureBuilder = this.mCameraDevice.CreateCaptureRequest(CameraTemplate.StillCapture);
+                CaptureRequest.Builder captureBuilder = this.cameraDevice.CreateCaptureRequest(CameraTemplate.StillCapture);
                 captureBuilder.AddTarget(reader.Surface);
                 this.SetUpCaptureRequestBuilder(captureBuilder);
                 // Orientation
                 SurfaceOrientation rotation = activity.WindowManager.DefaultDisplay.Rotation;
-                captureBuilder.Set(CaptureRequest.JpegOrientation, new Integer(ORIENTATIONS.Get((int)rotation)));
+                captureBuilder.Set(CaptureRequest.JpegOrientation, new Integer(Orientations.Get((int)rotation)));
 
                 // Output file
-                File file = new File(activity.GetExternalFilesDir(null), "DEMO_"+DateTime.Now.ToString("yyyyMMdd_HHmmss") + ".jpg");
+                
+                File file = new File(activity.GetExternalFilesDir(null), "DEMO_" + DateTime.Now.ToString("yyyyMMdd_HHmmss") + ".jpg");
 
                 // This listener is called when an image is ready in ImageReader 
-                // Right click on ImageAvailableListener in your IDE and go to its definition
-                ImageAvailableListener readerListener = new ImageAvailableListener { File = file };
+                var readerListener = new ImageAvailableListener
+                {
+                    File = file
+                };
 
                 // We create a Handler since we want to handle the resulting JPEG in a background thread
                 HandlerThread thread = new HandlerThread("CameraPicture");
@@ -507,13 +532,15 @@ namespace Camera2Basic
 
                 //This listener is called when the capture is completed
                 // Note that the JPEG data is not available in this listener, but in the ImageAvailableListener we created above
-                // Right click on CameraCaptureListener in your IDE and go to its definition
-                CameraCaptureListener captureListener = new CameraCaptureListener { Fragment = this, File = file };
+                var captureListener = new CameraCaptureListener
+                {
+                    Fragment = this, 
+                    File = file
+                };
 
-                this.mCameraDevice.CreateCaptureSession(
+                this.cameraDevice.CreateCaptureSession(
                     outputSurfaces,
-                    new CameraCaptureStateListener()
-                        {
+                    new CameraCaptureStateListener {
                             OnConfiguredAction = (CameraCaptureSession session) =>
                                 {
                                     try
@@ -539,7 +566,7 @@ namespace Camera2Basic
             ////switch (v.Id)
             ////{
             ////    case Resource.Id.picture:
-                    this.TakePicture();
+            this.TakePicture();
             ////        break;
             ////}
         }
