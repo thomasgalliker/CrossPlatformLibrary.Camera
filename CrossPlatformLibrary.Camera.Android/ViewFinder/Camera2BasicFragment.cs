@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 
 using Android.App;
 using Android.Content;
@@ -29,8 +30,12 @@ using Uri = Android.Net.Uri;
 
 namespace CrossPlatformLibrary.Camera.ViewFinder
 {
+    /// <summary>
+    /// Source: http://developer.android.com/samples/Camera2Basic/src/com.example.android.camera2basic/Camera2BasicFragment.html
+    /// https://gist.github.com/anonymous/be03bb6f5fa5287bc52b
+    /// </summary>
     [Preserve(AllMembers = true)]
-    public class Camera2BasicFragment : Fragment, View.IOnClickListener
+    public class Camera2BasicFragment : Fragment
     {
         internal const string ExtraPath = "path";
         internal const string ExtraLocation = "location";
@@ -49,6 +54,18 @@ namespace CrossPlatformLibrary.Camera.ViewFinder
 
         // A reference to the opened CameraDevice
         private CameraDevice cameraDevice;
+
+        // The size of the camera preview
+        private Size previewSize;
+
+        // True if the app is currently trying to open the camera
+        private bool openingCamera;
+
+        // CameraDevice.StateListener is called when a CameraDevice changes its state
+        private CameraStateListener cameraStateListener;
+
+        private Uri path;
+        private readonly ITracer tracer = Tracer.Create<Camera2BasicFragment>();
 
         // TextureView.ISurfaceTextureListener handles several lifecycle events on a TextureView
         private Camera2BasicSurfaceTextureListener mSurfaceTextureListener;
@@ -86,15 +103,6 @@ namespace CrossPlatformLibrary.Camera.ViewFinder
             }
         }
 
-        // The size of the camera preview
-        private Size previewSize;
-
-        // True if the app is currently trying to open the camera
-        private bool mOpeningCamera;
-
-        // CameraDevice.StateListener is called when a CameraDevice changes its state
-        private CameraStateListener mStateListener;
-
         private class CameraStateListener : CameraDevice.StateCallback
         {
             public Camera2BasicFragment Fragment;
@@ -105,7 +113,7 @@ namespace CrossPlatformLibrary.Camera.ViewFinder
                 {
                     this.Fragment.cameraDevice = camera;
                     this.Fragment.StartPreview();
-                    this.Fragment.mOpeningCamera = false;
+                    this.Fragment.openingCamera = false;
                 }
             }
 
@@ -115,7 +123,7 @@ namespace CrossPlatformLibrary.Camera.ViewFinder
                 {
                     camera.Close();
                     this.Fragment.cameraDevice = null;
-                    this.Fragment.mOpeningCamera = false;
+                    this.Fragment.openingCamera = false;
                 }
             }
 
@@ -126,7 +134,7 @@ namespace CrossPlatformLibrary.Camera.ViewFinder
                 {
                     this.Fragment.cameraDevice = null;
                     Activity activity = this.Fragment.Activity;
-                    this.Fragment.mOpeningCamera = false;
+                    this.Fragment.openingCamera = false;
                     if (activity != null)
                     {
                         activity.Finish();
@@ -211,6 +219,8 @@ namespace CrossPlatformLibrary.Camera.ViewFinder
 
         private void OnMediaPicked(MediaPickedEventArgs e)
         {
+            this.tracer.Debug("OnMediaPicked");
+
             var picked = MediaPicked;
             if (picked != null)
             {
@@ -242,9 +252,6 @@ namespace CrossPlatformLibrary.Camera.ViewFinder
             }
         }
 
-        private Uri path;
-        private ITracer tracer = Tracer.Create<Camera2BasicFragment>();
-
         public override void OnCreate(Bundle savedInstanceState)
         {
             base.OnCreate(savedInstanceState);
@@ -252,7 +259,7 @@ namespace CrossPlatformLibrary.Camera.ViewFinder
             Bundle b = (savedInstanceState ?? this.Activity.Intent.Extras);
             this.path = Uri.Parse(b.GetString(ExtraPath));
 
-            this.mStateListener = new CameraStateListener { Fragment = this };
+            this.cameraStateListener = new CameraStateListener { Fragment = this };
             this.mSurfaceTextureListener = new Camera2BasicSurfaceTextureListener(this);
             Orientations.Append((int)SurfaceOrientation.Rotation0, 90);
             Orientations.Append((int)SurfaceOrientation.Rotation90, 0);
@@ -286,7 +293,9 @@ namespace CrossPlatformLibrary.Camera.ViewFinder
         {
             this.autoFitTextureView = (AutoFitTextureView)view.FindViewById(Resource.Id.texture);
             this.autoFitTextureView.SurfaceTextureListener = this.mSurfaceTextureListener;
-            view.FindViewById(Resource.Id.picture).SetOnClickListener(this);
+
+            var takePictureButton = view.FindViewById(Resource.Id.takePictureButton);
+            takePictureButton.Click += this.TakePictureButtonOnClick;
         }
 
         public override void OnResume()
@@ -298,23 +307,22 @@ namespace CrossPlatformLibrary.Camera.ViewFinder
         public override void OnPause()
         {
             base.OnPause();
-            if (this.cameraDevice != null)
-            {
-                this.cameraDevice.Close();
-                this.cameraDevice = null;
-            }
+            this.CloseCamera();
         }
 
-        // Opens a CameraDevice. The result is listened to by 'mStateListener'.
+        // Opens a CameraDevice. The result is listened to by 'cameraStateListener'.
         private void OpenCamera()
         {
+            this.tracer.Debug("OpenCamera");
+
             var activity = this.Activity;
-            if (activity == null || activity.IsFinishing || this.mOpeningCamera)
+            if (activity == null || activity.IsFinishing || this.openingCamera)
             {
                 return;
             }
-            this.mOpeningCamera = true;
-            CameraManager cameraManager = (CameraManager)activity.GetSystemService(Context.CameraService);
+            this.openingCamera = true;
+            var cameraManager = (CameraManager)activity.GetSystemService(Context.CameraService);
+
             try
             {
                 string cameraId = cameraManager.GetCameraIdList()[0];
@@ -334,8 +342,8 @@ namespace CrossPlatformLibrary.Camera.ViewFinder
                     this.autoFitTextureView.SetAspectRatio(this.previewSize.Height, this.previewSize.Width);
                 }
 
-                // We are opening the camera with a listener. When it is ready, OnOpened of mStateListener is called.
-                cameraManager.OpenCamera(cameraId, this.mStateListener, null);
+                // We are opening the camera with a listener. When it is ready, OnOpened of cameraStateListener is called.
+                cameraManager.OpenCamera(cameraId, this.cameraStateListener, null);
             }
             catch (CameraAccessException caex)
             {
@@ -350,6 +358,35 @@ namespace CrossPlatformLibrary.Camera.ViewFinder
                 var dialog = new ErrorDialog();
                 dialog.Show(this.FragmentManager, "dialog");
             }
+            catch (InterruptedException e)
+            {
+                const string ErrorMessage = "Interrupted while trying to lock camera opening.";
+                this.tracer.Exception(e, ErrorMessage);
+                throw new RuntimeException(ErrorMessage);
+            }
+
+        }
+
+        /**
+    * A {@link Semaphore} to prevent the app from exiting before closing the camera.
+    */
+        private readonly object mCameraOpenCloseLock = new object();
+
+        private void CloseCamera()
+        {
+            lock (this.mCameraOpenCloseLock)
+            {
+                if (null != this.cameraDevice)
+                {
+                    this.cameraDevice.Close();
+                    this.cameraDevice = null;
+                }
+                ////if (null != mMediaRecorder)
+                ////{
+                ////    mMediaRecorder.release();
+                ////    mMediaRecorder = null;
+                ////} 
+            }
         }
 
         private void StartPreview()
@@ -358,6 +395,9 @@ namespace CrossPlatformLibrary.Camera.ViewFinder
             {
                 return;
             }
+
+            this.tracer.Debug("StartPreview");
+
             try
             {
                 SurfaceTexture texture = this.autoFitTextureView.SurfaceTexture;
@@ -376,26 +416,27 @@ namespace CrossPlatformLibrary.Camera.ViewFinder
                 // Here, we create a CameraCaptureSession for camera preview.
                 this.cameraDevice.CreateCaptureSession(
                     new List<Surface> { surface },
-                    new CameraCaptureStateListener {
-                            OnConfigureFailedAction = (CameraCaptureSession session) =>
+                    new CameraCaptureStateListener
+                    {
+                        OnConfigureFailedAction = (CameraCaptureSession session) =>
+                            {
+                                Activity activity = this.Activity;
+                                if (activity != null)
                                 {
-                                    Activity activity = this.Activity;
-                                    if (activity != null)
-                                    {
-                                        Toast.MakeText(activity, "Failed", ToastLength.Short).Show();
-                                    }
-                                },
-                            OnConfiguredAction = (CameraCaptureSession session) =>
-                                {
-                                    this.previewSession = session;
-                                    this.UpdatePreview();
+                                    this.tracer.Error("OnConfigureFailedAction");
                                 }
-                        },
+                            },
+                        OnConfiguredAction = (CameraCaptureSession session) =>
+                            {
+                                this.previewSession = session;
+                                this.UpdatePreview();
+                            }
+                    },
                     null);
             }
             catch (CameraAccessException ex)
             {
-                Log.WriteLine(LogPriority.Info, "Camera2BasicFragment", ex.StackTrace);
+                this.tracer.Exception(ex, "Failed to StartPreview.");
             }
         }
 
@@ -409,13 +450,15 @@ namespace CrossPlatformLibrary.Camera.ViewFinder
                 return;
             }
 
+            this.tracer.Debug("UpdatePreview");
+
             try
             {
                 // The camera preview can be run in a background thread. This is a Handler for the camere preview
                 this.SetUpCaptureRequestBuilder(this.previewBuilder);
-                HandlerThread thread = new HandlerThread("CameraPreview");
+                var thread = new HandlerThread("CameraPreview");
                 thread.Start();
-                Handler backgroundHandler = new Handler(thread.Looper);
+                var backgroundHandler = new Handler(thread.Looper);
 
                 // Finally, we start displaying the camera preview
                 this.previewSession.SetRepeatingRequest(this.previewBuilder.Build(), null, backgroundHandler);
@@ -472,8 +515,15 @@ namespace CrossPlatformLibrary.Camera.ViewFinder
             this.autoFitTextureView.SetTransform(matrix);
         }
 
+        private void TakePictureButtonOnClick(object sender, EventArgs e)
+        {
+            this.TakePicture();
+        }
+
         private void TakePicture()
         {
+            this.tracer.Debug("TakePicture");
+
             try
             {
                 Activity activity = this.Activity;
@@ -485,7 +535,7 @@ namespace CrossPlatformLibrary.Camera.ViewFinder
                 var cameraManager = (CameraManager)activity.GetSystemService(Context.CameraService);
 
                 // Pick the best JPEG size that can be captures with this CameraDevice
-                CameraCharacteristics characteristics = cameraManager.GetCameraCharacteristics(this.cameraDevice.Id);
+                var characteristics = cameraManager.GetCameraCharacteristics(this.cameraDevice.Id);
                 Size[] jpegSizes = null;
                 if (characteristics != null)
                 {
@@ -500,23 +550,25 @@ namespace CrossPlatformLibrary.Camera.ViewFinder
                     height = jpegSizes[0].Height;
                 }
 
+                this.tracer.Debug("TakePicture: Found {0} jpegSizes. Selected {1}x{2}px.", jpegSizes.Count(), width, height);
+
                 // We use an ImageReader to get a JPEG from CameraDevice
                 // Here, we create a new ImageReader and prepare its Surface as an output from the camera
-                ImageReader reader = ImageReader.NewInstance(width, height, ImageFormatType.Jpeg, 1);
-                List<Surface> outputSurfaces = new List<Surface>(2);
+                var reader = ImageReader.NewInstance(width, height, ImageFormatType.Jpeg, 1);
+                var outputSurfaces = new List<Surface>(2);
                 outputSurfaces.Add(reader.Surface);
                 outputSurfaces.Add(new Surface(this.autoFitTextureView.SurfaceTexture));
 
-                CaptureRequest.Builder captureBuilder = this.cameraDevice.CreateCaptureRequest(CameraTemplate.StillCapture);
+                var captureBuilder = this.cameraDevice.CreateCaptureRequest(CameraTemplate.StillCapture);
                 captureBuilder.AddTarget(reader.Surface);
                 this.SetUpCaptureRequestBuilder(captureBuilder);
+
                 // Orientation
-                SurfaceOrientation rotation = activity.WindowManager.DefaultDisplay.Rotation;
+                var rotation = activity.WindowManager.DefaultDisplay.Rotation;
                 captureBuilder.Set(CaptureRequest.JpegOrientation, new Integer(Orientations.Get((int)rotation)));
 
                 // Output file
-                
-                File file = new File(activity.GetExternalFilesDir(null), "DEMO_" + DateTime.Now.ToString("yyyyMMdd_HHmmss") + ".jpg");
+                var file = new File(activity.GetExternalFilesDir(null), "DEMO_" + DateTime.Now.ToString("yyyyMMdd_HHmmss") + ".jpg");
 
                 // This listener is called when an image is ready in ImageReader 
                 var readerListener = new ImageAvailableListener
@@ -525,50 +577,41 @@ namespace CrossPlatformLibrary.Camera.ViewFinder
                 };
 
                 // We create a Handler since we want to handle the resulting JPEG in a background thread
-                HandlerThread thread = new HandlerThread("CameraPicture");
+                var thread = new HandlerThread("CameraPicture");
                 thread.Start();
-                Handler backgroundHandler = new Handler(thread.Looper);
+                var backgroundHandler = new Handler(thread.Looper);
                 reader.SetOnImageAvailableListener(readerListener, backgroundHandler);
 
                 //This listener is called when the capture is completed
                 // Note that the JPEG data is not available in this listener, but in the ImageAvailableListener we created above
                 var captureListener = new CameraCaptureListener
                 {
-                    Fragment = this, 
+                    Fragment = this,
                     File = file
                 };
 
                 this.cameraDevice.CreateCaptureSession(
                     outputSurfaces,
-                    new CameraCaptureStateListener {
-                            OnConfiguredAction = (CameraCaptureSession session) =>
+                    new CameraCaptureStateListener
+                    {
+                        OnConfiguredAction = (CameraCaptureSession session) =>
+                            {
+                                try
                                 {
-                                    try
-                                    {
-                                        session.Capture(captureBuilder.Build(), captureListener, backgroundHandler);
-                                    }
-                                    catch (CameraAccessException ex)
-                                    {
-                                        Log.WriteLine(LogPriority.Info, "Capture Session error: ", ex.ToString());
-                                    }
+                                    session.Capture(captureBuilder.Build(), captureListener, backgroundHandler);
                                 }
-                        },
+                                catch (CameraAccessException ex)
+                                {
+                                    this.tracer.Exception(ex, "Capture session error.");
+                                }
+                            }
+                    },
                     backgroundHandler);
             }
             catch (CameraAccessException ex)
             {
-                Log.WriteLine(LogPriority.Info, "Taking picture error: ", ex.StackTrace);
+                this.tracer.Exception(ex, "Failed to take picture.");
             }
-        }
-
-        public void OnClick(View v)
-        {
-            ////switch (v.Id)
-            ////{
-            ////    case Resource.Id.picture:
-            this.TakePicture();
-            ////        break;
-            ////}
         }
 
         public class ErrorDialog : DialogFragment

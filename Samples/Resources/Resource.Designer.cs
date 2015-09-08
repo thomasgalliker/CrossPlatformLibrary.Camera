@@ -26,8 +26,10 @@ namespace AndroidCameraApp
 		
 		public static void UpdateIdValues()
 		{
+			global::CrossPlatformLibrary.Camera.Resource.Drawable.camera = global::AndroidCameraApp.Resource.Drawable.camera;
+			global::CrossPlatformLibrary.Camera.Resource.Drawable.round_button = global::AndroidCameraApp.Resource.Drawable.round_button;
 			global::CrossPlatformLibrary.Camera.Resource.Id.container = global::AndroidCameraApp.Resource.Id.container;
-			global::CrossPlatformLibrary.Camera.Resource.Id.picture = global::AndroidCameraApp.Resource.Id.picture;
+			global::CrossPlatformLibrary.Camera.Resource.Id.takePictureButton = global::AndroidCameraApp.Resource.Id.takePictureButton;
 			global::CrossPlatformLibrary.Camera.Resource.Id.texture = global::AndroidCameraApp.Resource.Id.texture;
 			global::CrossPlatformLibrary.Camera.Resource.Layout.activity_camera = global::AndroidCameraApp.Resource.Layout.activity_camera;
 			global::CrossPlatformLibrary.Camera.Resource.Layout.fragment_camera2_basic = global::AndroidCameraApp.Resource.Layout.fragment_camera2_basic;
@@ -51,7 +53,13 @@ namespace AndroidCameraApp
 		{
 			
 			// aapt resource value: 0x7f020000
-			public const int Icon = 2130837504;
+			public const int camera = 2130837504;
+			
+			// aapt resource value: 0x7f020001
+			public const int Icon = 2130837505;
+			
+			// aapt resource value: 0x7f020002
+			public const int round_button = 2130837506;
 			
 			static Drawable()
 			{
@@ -85,7 +93,7 @@ namespace AndroidCameraApp
 			public const int imageView1 = 2131034117;
 			
 			// aapt resource value: 0x7f050002
-			public const int picture = 2131034114;
+			public const int takePictureButton = 2131034114;
 			
 			// aapt resource value: 0x7f050001
 			public const int texture = 2131034113;

@@ -28,8 +28,9 @@ namespace MediaAndroidTest
             base.OnCreate(bundle);
 
             var bootstrapper = new Bootstrapper();
-            bootstrapper.Startup();
-            Tracer.SetFactory(new AndroidLogTracerFactory());
+            bootstrapper.Startup(); // TODO STARTUP SHALL ONLY BE CALLED IF BUNDLE TELLS US THAT IT IS THE FIRST STARTUP
+  
+            ////Tracer.SetFactory(new AndroidLogTracerFactory()); // TODO SET ANDROID LOG TARCER AS DEFAULT FOR ANDROID
 
             // Set our view from the "main" layout resource
             this.SetContentView(Resource.Layout.Main);
