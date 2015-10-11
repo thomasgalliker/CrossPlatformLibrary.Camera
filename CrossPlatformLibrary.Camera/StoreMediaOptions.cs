@@ -6,35 +6,19 @@ namespace CrossPlatformLibrary.Camera
 {
     public class StoreMediaOptions
     {
-        public string Directory
+        public StoreMediaOptions(string name = null, string directory = "")
         {
-            get;
-            set;
-        }
-
-        public string Name
-        {
-            get;
-            set;
-        }
-
-        public void VerifyOptions()
-        {
-            if (Path.IsPathRooted(this.Directory))
+            if (Path.IsPathRooted(directory))
             {
-                throw new ArgumentException("options.Directory must be a relative path", "options");
+                throw new ArgumentException("Directory must be a relative path", "directory");
             }
-        }
 
-        public string GetFilePath(string rootPath)
-        {
-            bool isPhoto = !(this is StoreVideoOptions);
+            this.Directory = directory;
 
-            string name = this.Name;
-            if (String.IsNullOrWhiteSpace(name))
+            if (string.IsNullOrWhiteSpace(name))
             {
                 string timestamp = DateTime.Now.ToString("yyyyMMdd_HHmmss");
-                if (isPhoto)
+                if (this.IsPhoto)
                 {
                     name = "IMG_" + timestamp + ".jpg";
                 }
@@ -44,34 +28,54 @@ namespace CrossPlatformLibrary.Camera
                 }
             }
 
-            string ext = Path.GetExtension(name);
-            if (ext == String.Empty)
-            {
-                ext = ((isPhoto) ? ".jpg" : ".mp4");
-            }
-
-            name = Path.GetFileNameWithoutExtension(name);
-
-            string folder = Path.Combine(rootPath ?? String.Empty, this.Directory ?? string.Empty);
-
-            return Path.Combine(folder, name + ext);
+            this.Name = name;
         }
 
-        public string GetUniqueFilepath(string rootPath, Func<string, bool> checkExists)
+        public string Directory
         {
-            string path = this.GetFilePath(rootPath);
-            string folder = Path.GetDirectoryName(path);
-            string ext = Path.GetExtension(path);
-            string name = Path.GetFileNameWithoutExtension(path);
+            get; private set;
+        }
 
-            string nname = name + ext;
-            int i = 1;
-            while (checkExists(Path.Combine(folder, nname)))
+        public string Name
+        {
+            get; private set;
+        }
+
+        private bool IsPhoto
+        {
+            get
             {
-                nname = name + "_" + (i++) + ext;
+                return !(this is StoreVideoOptions);
+            }
+        }
+
+        public string GetFilePath(string rootPath)
+        {
+            if (!Path.IsPathRooted(rootPath))
+            {
+                throw new ArgumentException("Directory must be a root path", "rootPath");
             }
 
-            return Path.Combine(folder, nname);
+            string folder = Path.Combine(rootPath ?? string.Empty, this.Directory ?? string.Empty);
+
+            return Path.Combine(folder, this.Name);
         }
+
+        ////public string GetUniqueFilepath(string rootPath, Func<string, bool> checkExists)
+        ////{
+        ////    string path = this.GetFilePath(rootPath);
+        ////    string folder = Path.GetDirectoryName(path);
+        ////    string ext = Path.GetExtension(path);
+        ////    string name = Path.GetFileNameWithoutExtension(path);
+
+        ////    string nname = name + ext;
+        ////    int i = 1;
+        ////    while (checkExists(Path.Combine(folder, nname)))
+        ////    {
+        ////        nname = name + "_" + (i++) + ext;
+        ////    }
+
+        ////    return Path.Combine(folder, nname);
+        ////}
     }
 }

@@ -4,7 +4,7 @@ namespace CrossPlatformLibrary.Camera
 {
     public class StoreVideoOptions : StoreMediaOptions
     {
-        public StoreVideoOptions()
+        public StoreVideoOptions(string name = null, string directory = "") : base(name, directory)
         {
             this.Quality = VideoQuality.High;
             this.DesiredLength = TimeSpan.FromMinutes(10);
@@ -12,14 +12,12 @@ namespace CrossPlatformLibrary.Camera
 
         public TimeSpan DesiredLength
         {
-            get;
-            set;
+            get; private set;
         }
 
         public VideoQuality Quality
         {
-            get;
-            set;
+            get; private set;
         }
     }
 }

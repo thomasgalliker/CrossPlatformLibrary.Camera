@@ -1,5 +1,4 @@
-﻿using System.IO;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 
 namespace CrossPlatformLibrary.Camera
 {
@@ -8,7 +7,7 @@ namespace CrossPlatformLibrary.Camera
         /// <summary>
         /// Saves the given stream as jpeg to the camera roll.
         /// </summary>
-        Task SaveToCameraRoll(Stream stream);
+        Task SaveToCameraRoll(MediaFile mediafile, bool overwrite = true);
 
         /// <summary>
         ///     Picks a photo from the default gallery

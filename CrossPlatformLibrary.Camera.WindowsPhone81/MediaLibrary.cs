@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
 using CrossPlatformLibrary.Tracing;
-using CrossPlatformLibrary.Utils;
+using Guards;
 using Windows.Storage;
 using Windows.Storage.Pickers;
 
@@ -24,20 +24,20 @@ namespace CrossPlatformLibrary.Camera
         }
 
         /// <inheritdoc />
-        public async Task SaveToCameraRoll(Stream stream)
+        public async Task SaveToCameraRoll(MediaFile mediafile, bool overwrite = true)
         {
-            string fileName = string.Format("{0:yyyy-MM-dd-HH-mm-ss}.jpg", DateTime.Now);
-
-            this.tracer.Debug("SaveToCameraRoll with fileName {0}", fileName);
+            string targetFilename = mediafile.Filename;
+            this.tracer.Debug("SaveToCameraRoll with targetFilename={0}, overwrite={1}", targetFilename, overwrite);
 
             try
             {
+                var collisionOption = overwrite ? CreationCollisionOption.ReplaceExisting : CreationCollisionOption.FailIfExists;
                 var cameraRollFolder = KnownFolders.CameraRoll;
-                var newFile = await cameraRollFolder.CreateFileAsync(fileName, CreationCollisionOption.ReplaceExisting);
+                var targetFile = await cameraRollFolder.CreateFileAsync(targetFilename, collisionOption);
 
-                using (var outputstream = await newFile.OpenStreamForWriteAsync())
+                using (var outputstream = await targetFile.OpenStreamForWriteAsync())
                 {
-                    await stream.CopyToAsync(outputstream);
+                    await mediafile.GetStream().CopyToAsync(outputstream);
                 }
             }
             catch (UnauthorizedAccessException ex)

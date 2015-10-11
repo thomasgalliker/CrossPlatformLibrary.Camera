@@ -13,9 +13,11 @@ namespace CrossPlatformLibrary.Camera.ViewFinder
         {
             base.OnCreate(bundle);
 
-            this.Window.AddFlags(WindowManagerFlags.Fullscreen); //to hide
+            this.Window.AddFlags(WindowManagerFlags.Fullscreen);
+            this.Window.AddFlags(WindowManagerFlags.TranslucentNavigation);
 
             this.ActionBar.Hide();
+
             this.SetContentView(Resource.Layout.activity_camera);
 
             if (bundle == null)

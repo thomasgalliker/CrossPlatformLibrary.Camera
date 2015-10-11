@@ -6,7 +6,7 @@ namespace CrossPlatformLibrary.Camera
     {
         public void Initialize(ISimpleIoc container)
         {
-            container.RegisterWithConvention<IMedia>();
+            //container.RegisterWithConvention<IMedia>();
             container.RegisterWithConvention<IMediaAccess>();
             container.RegisterWithConvention<IMediaLibrary>();
         }

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
 using CrossPlatformLibrary.Tracing;
-using CrossPlatformLibrary.Utils;
+using Guards;
 using Windows.Storage.Pickers;
 
 namespace CrossPlatformLibrary.Camera
@@ -23,23 +23,21 @@ namespace CrossPlatformLibrary.Camera
         }
 
         /// <inheritdoc />
-        public async Task SaveToCameraRoll(Stream stream)
+        public async Task SaveToCameraRoll(MediaFile mediafile, bool overwrite = true)
         {
-            string fileName = string.Format("{0:yyyy-MM-dd-HH-mm-ss}.jpg", DateTime.Now);
-
-            this.tracer.Debug("SaveToCameraRoll with fileName {0}", fileName);
+            string targetFilename = mediafile.Filename;
+            this.tracer.Debug("SaveToCameraRoll with targetFilename={0}, overwrite={1}", targetFilename, overwrite);
 
             try
             {
                 using (var mediaLibrary = new Microsoft.Xna.Framework.Media.MediaLibrary())
                 {
-                    mediaLibrary.SavePictureToCameraRoll(fileName, stream);
+                    mediaLibrary.SavePictureToCameraRoll(targetFilename, mediafile.GetStream());
                 }
 
             }
             catch (UnauthorizedAccessException ex)
             {
-
                 throw new UnauthorizedAccessException("Make sure that you add the ID_CAP_MEDIALIB_PHOTO capability in your WmAppManifest.", ex);
             }
         }

@@ -1,0 +1,24 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://xamarin.com/schemas/2014/forms"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="CameraSample.CameraPage">
+  
+  <Grid>
+    <Grid.RowDefinitions>
+      <RowDefinition Height="Auto"/>
+      <RowDefinition Height="*"/>
+    </Grid.RowDefinitions>
+
+    <!--TitlePanel contains the name of the application and page title-->
+    <StackLayout Grid.Row="0" Padding="12,17,0,28">
+      <Label Text="CrossPlatformLibrary.Camera"/>
+      <Label Text="Demo App"/>
+    </StackLayout>
+
+    <!--ContentPanel - place additional content here-->
+    <StackLayout Grid.Row="1">
+      <Button Text = "Take Front Picture" Clicked="OnTakeFrontPhotoTapped"/>
+      <Button Text = "Take Back Picture" Clicked="OnTakeBackPhotoTapped"/>
+    </StackLayout>
+  </Grid>
+</ContentPage>

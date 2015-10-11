@@ -35,7 +35,7 @@
     <DocumentationFile>bin\iPhone\Release\CrossPlatformLibrary.Camera.Platform.xml</DocumentationFile>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="Media.cs" />
+    <Compile Include="MediaAccess.cs" />
     <Compile Include="MediaPickerController.cs" />
     <Compile Include="MediaPickerDelegate.cs" />
     <Compile Include="NSDataStream.cs" />
@@ -44,11 +44,15 @@
   </ItemGroup>
   <ItemGroup>
     <Reference Include="CrossPlatformLibrary, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\CrossPlatformLibrary.1.0.40-alpha\lib\MonoTouch10\CrossPlatformLibrary.dll</HintPath>
+      <HintPath>..\packages\CrossPlatformLibrary.1.0.63\lib\MonoTouch10\CrossPlatformLibrary.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="CrossPlatformLibrary.Platform, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\CrossPlatformLibrary.1.0.40-alpha\lib\MonoTouch10\CrossPlatformLibrary.Platform.dll</HintPath>
+      <HintPath>..\packages\CrossPlatformLibrary.1.0.63\lib\MonoTouch10\CrossPlatformLibrary.Platform.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Guards, Version=1.0.0.0, Culture=neutral, PublicKeyToken=ac6aedb73a72f46e, processorArchitecture=MSIL">
+      <HintPath>..\packages\Guards.1.0.7\lib\MonoTouch10\Guards.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="System" />

@@ -36,8 +36,6 @@ namespace CrossPlatformLibrary.Camera
                 throw new NotSupportedException();
             }
 
-            options.VerifyOptions();
-
             //var capture = new CameraCaptureUI(this.CameraFacingDirection);
             var capture = new ViewFinder(this.CameraFacingDirection);
             var result = await capture.CaptureFileAsync();
@@ -46,21 +44,25 @@ namespace CrossPlatformLibrary.Camera
                 return null;
             }
 
-            StorageFolder folder = ApplicationData.Current.LocalFolder;
+            StorageFolder rootFolder = ApplicationData.Current.LocalFolder;
 
-            string path = options.GetFilePath(folder.Path);
-            var directoryFull = Path.GetDirectoryName(path);
-            var newFolder = directoryFull.Replace(folder.Path, string.Empty);
-            if (!string.IsNullOrWhiteSpace(newFolder))
+            string targetFilePath = options.GetFilePath(rootFolder.Path);
+            var directoryPath = Path.GetDirectoryName(targetFilePath);
+            var directoryName = options.Directory;
+            if (!string.IsNullOrWhiteSpace(directoryName))
             {
-                await folder.CreateFolderAsync(newFolder, CreationCollisionOption.OpenIfExists);
+                var exists = Directory.Exists(directoryPath);
+                if (!exists)
+                {
+                    await rootFolder.CreateFolderAsync(directoryName, CreationCollisionOption.ReplaceExisting);
+                }
             }
 
-            folder = await StorageFolder.GetFolderFromPathAsync(directoryFull);
+            rootFolder = await StorageFolder.GetFolderFromPathAsync(directoryPath);
 
-            string filename = Path.GetFileName(path);
+            string targetFilename = Path.GetFileName(targetFilePath);
 
-            var file = await result.CopyAsync(folder, filename, NameCollisionOption.GenerateUniqueName).AsTask().ConfigureAwait(false);
+            var file = await result.CopyAsync(rootFolder, targetFilename, NameCollisionOption.ReplaceExisting).AsTask().ConfigureAwait(false);
 
             Stream stream = await file.OpenStreamForReadAsync().ConfigureAwait(false);
             return new MediaFile(file.Path, () => stream);

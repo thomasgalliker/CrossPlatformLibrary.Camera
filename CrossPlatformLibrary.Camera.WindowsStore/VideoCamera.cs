@@ -17,8 +17,6 @@ namespace CrossPlatformLibrary.Camera
         /// <inheritdoc />
         public async Task<MediaFile> TakeVideoAsync(StoreVideoOptions options)
         {
-            options.VerifyOptions();
-
             var capture = new CameraCaptureUI();
             capture.VideoSettings.MaxResolution = options.Quality.GetResolutionFromQuality();
             capture.VideoSettings.MaxDurationInSeconds = (float)options.DesiredLength.TotalSeconds;

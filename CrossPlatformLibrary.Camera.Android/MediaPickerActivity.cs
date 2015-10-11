@@ -10,8 +10,6 @@ using Android.OS;
 using Android.Provider;
 using Android.Runtime;
 
-using CrossPlatformLibrary.Utils;
-
 using Environment = Android.OS.Environment;
 using FileNotFoundException = Java.IO.FileNotFoundException;
 using Uri = Android.Net.Uri;
@@ -192,7 +190,7 @@ namespace CrossPlatformLibrary.Camera
                         string resultPath = t.Result.Item1;
                         if (resultPath != null && File.Exists(t.Result.Item1))
                         {
-                            var mf = new MediaFile(
+                            var mediaFile = new MediaFile(
                                 resultPath,
                                 () => { return File.OpenRead(resultPath); },
                                 deletePathOnDispose: t.Result.Item2,
@@ -216,7 +214,7 @@ namespace CrossPlatformLibrary.Camera
                                             }
                                         }
                                     });
-                            return new MediaPickedEventArgs(requestCode, false, mf);
+                            return new MediaPickedEventArgs(requestCode, mediaFile);
                         }
                         else
                         {
@@ -225,12 +223,6 @@ namespace CrossPlatformLibrary.Camera
                     });
         }
 
-        /// <summary>
-        ///     OnActivity Result
-        /// </summary>
-        /// <param name="requestCode"></param>
-        /// <param name="resultCode"></param>
-        /// <param name="data"></param>
         protected override void OnActivityResult(int requestCode, Result resultCode, Intent data)
         {
             base.OnActivityResult(requestCode, resultCode, data);
@@ -330,6 +322,7 @@ namespace CrossPlatformLibrary.Camera
             return Path.Combine(folder, nname);
         }
 
+        // TODO GATH: HARMONIZE!!
         private static Uri GetOutputMediaFile(Context context, string subdir, string name, bool isPhoto)
         {
             subdir = subdir ?? String.Empty;
@@ -461,57 +454,6 @@ namespace CrossPlatformLibrary.Camera
             {
                 picked(null, e);
             }
-        }
-    }
-
-    internal class MediaPickedEventArgs : EventArgs
-    {
-        public MediaPickedEventArgs(int id, Exception error)
-        {
-            Guard.ArgumentNotNull(() => error);
-
-            this.RequestId = id;
-            this.Error = error;
-        }
-
-        public MediaPickedEventArgs(int id, bool isCanceled, MediaFile media = null)
-        {
-            this.RequestId = id;
-            this.IsCanceled = isCanceled;
-            if (!this.IsCanceled)
-            {
-                Guard.ArgumentNotNull(() => media);
-            }
-
-            this.Media = media;
-        }
-
-        public int RequestId { get; private set; }
-
-        public bool IsCanceled { get; private set; }
-
-        public Exception Error { get; private set; }
-
-        public MediaFile Media { get; private set; }
-
-        public Task<MediaFile> ToTask()
-        {
-            var tcs = new TaskCompletionSource<MediaFile>();
-
-            if (this.IsCanceled)
-            {
-                tcs.SetResult(null);
-            }
-            else if (this.Error != null)
-            {
-                tcs.SetResult(null);
-            }
-            else
-            {
-                tcs.SetResult(this.Media);
-            }
-
-            return tcs.Task;
         }
     }
 }

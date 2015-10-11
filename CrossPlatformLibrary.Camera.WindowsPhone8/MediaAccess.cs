@@ -31,7 +31,7 @@ namespace CrossPlatformLibrary.Camera
                     throw new InvalidOperationException("Could not find any cameras. Unable to use MediaAccess if no camera is present.");
                 }
             }
-            catch (Exception ex)
+            catch (UnauthorizedAccessException ex)
             {
                 throw new Exception("You must set the ID_CAP_ISV_CAMERA permission.", ex);
             }
