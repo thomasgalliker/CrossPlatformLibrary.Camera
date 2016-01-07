@@ -6,7 +6,7 @@
     <title>CrossPlatformLibrary.Camera</title>
     <authors>Thomas Galliker</authors>
     <licenseUrl>http://opensource.org/licenses/Apache-2.0</licenseUrl>
-    <projectUrl>https://nuget.org/packages/CrossPlatformLibrary.Camera</projectUrl>
+    <projectUrl>https://github.com/thomasgalliker/CrossPlatformLibrary.Camera</projectUrl>
     <iconUrl>https://nuget.org/Content/Images/packageDefaultIcon-50x50.png</iconUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <summary>CrossPlatformLibrary.Camera is a plug-in for platform-independent access to the photo/video camera(s).</summary>
@@ -17,7 +17,7 @@
     </tags>
     <releaseNotes>
     </releaseNotes>
-    <copyright>Copyright 2015</copyright>
+    <copyright>Copyright 2016</copyright>
     <language>en-US</language>
     <dependencies>
       <group targetFramework="MonoTouch10">
