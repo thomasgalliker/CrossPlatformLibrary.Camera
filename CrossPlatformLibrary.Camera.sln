@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 14
-VisualStudioVersion = 14.0.23107.0
+VisualStudioVersion = 14.0.24720.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "nuget", "nuget", "{B5AEA046-0E87-4A7B-8F11-80B6BDDA1F2A}"
 EndProject
@@ -468,6 +468,7 @@ Global
 		{60D67959-2C60-4080-A91A-338B8A06012B}.Debug|ARM.Build.0 = Debug|Any CPU
 		{60D67959-2C60-4080-A91A-338B8A06012B}.Debug|iPhone.ActiveCfg = Debug|Any CPU
 		{60D67959-2C60-4080-A91A-338B8A06012B}.Debug|iPhoneSimulator.ActiveCfg = Debug|Any CPU
+		{60D67959-2C60-4080-A91A-338B8A06012B}.Debug|iPhoneSimulator.Build.0 = Debug|Any CPU
 		{60D67959-2C60-4080-A91A-338B8A06012B}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
 		{60D67959-2C60-4080-A91A-338B8A06012B}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
 		{60D67959-2C60-4080-A91A-338B8A06012B}.Debug|x64.ActiveCfg = Debug|Any CPU

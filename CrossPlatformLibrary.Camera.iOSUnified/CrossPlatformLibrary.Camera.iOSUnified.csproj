@@ -38,6 +38,9 @@
     <Compile Include="..\CrossPlatformLibrary.Camera.iOS\MediaAccess.cs">
       <Link>MediaAccess.cs</Link>
     </Compile>
+    <Compile Include="..\CrossPlatformLibrary.Camera.iOS\MediaLibrary.cs">
+      <Link>MediaLibrary.cs</Link>
+    </Compile>
     <Compile Include="..\CrossPlatformLibrary.Camera.iOS\MediaPickerController.cs">
       <Link>MediaPickerController.cs</Link>
     </Compile>
