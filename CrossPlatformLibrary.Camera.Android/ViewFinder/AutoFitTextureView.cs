@@ -6,7 +6,7 @@ using Android.Runtime;
 using Android.Util;
 using Android.Views;
 
-using CrossPlatformLibrary.Tracing;
+using Tracing;
 
 namespace Camera2Basic
 {

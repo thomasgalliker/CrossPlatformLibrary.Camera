@@ -23,7 +23,7 @@ namespace CrossPlatformLibrary.Camera
         {
             this.viewController = viewController;
             this.source = sourceType;
-            //this.options = options ?? new StoreMediaOptions();
+            this.options = options ?? new StoreMediaOptions();
 
             if (viewController != null)
             {

@@ -7,7 +7,7 @@ using Android.Runtime;
 
 
 using CrossPlatformLibrary.Camera.ViewFinder;
-using CrossPlatformLibrary.Tracing;
+using Tracing;
 using Guards;
 
 

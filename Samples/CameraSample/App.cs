@@ -13,7 +13,7 @@ namespace CameraSample
             this.bootstrapper = new Bootstrapper();
             this.bootstrapper.Startup();
 
-            this.MainPage = new CameraPage();
+            this.MainPage = new NavigationPage(new CameraPage());
         }
 
         protected override void OnStart()

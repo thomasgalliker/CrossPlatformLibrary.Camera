@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
-using CrossPlatformLibrary.Tracing;
+using Tracing;
 using Guards;
 using Windows.Storage;
 using Windows.Storage.Pickers;

@@ -3,7 +3,7 @@ using System.Threading.Tasks;
 
 using Android.Content;
 
-using CrossPlatformLibrary.Tracing;
+using Tracing;
 
 using Guards;
 

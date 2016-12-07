@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 
 using CrossPlatformLibrary.Camera;
 using CrossPlatformLibrary.IoC;
-using CrossPlatformLibrary.Tracing;
+using Tracing;
 
 using Xamarin.Forms;
 

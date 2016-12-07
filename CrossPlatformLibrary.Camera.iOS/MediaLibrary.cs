@@ -1,9 +1,9 @@
 using System;
 using System.Threading.Tasks;
 
-using CrossPlatformLibrary.Tracing;
-
 using Guards;
+
+using Tracing;
 
 namespace CrossPlatformLibrary.Camera
 {
@@ -13,7 +13,8 @@ namespace CrossPlatformLibrary.Camera
 
         public MediaLibrary(ITracer tracer)
         {
-            Guard.ArgumentNotNull(() => tracer);
+            Guard.ArgumentNotNull(tracer, nameof(tracer));
+
             this.tracer = tracer;
         }
 

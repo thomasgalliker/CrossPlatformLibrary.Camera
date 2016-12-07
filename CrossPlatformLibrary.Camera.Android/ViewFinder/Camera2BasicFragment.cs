@@ -16,7 +16,7 @@ using Android.Widget;
 
 using Camera2Basic;
 
-using CrossPlatformLibrary.Tracing;
+using Tracing;
 
 using Java.IO;
 using Java.Lang;
