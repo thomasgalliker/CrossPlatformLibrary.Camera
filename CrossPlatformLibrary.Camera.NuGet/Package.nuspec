@@ -2,7 +2,7 @@
 <package xmlns="http://schemas.microsoft.com/packaging/2012/06/nuspec.xsd">
   <metadata>
     <id>CrossPlatformLibrary.Camera</id>
-    <version>2.0.0-pre1</version>
+    <version>2.0.0-pre2</version>
     <title>CrossPlatformLibrary.Camera</title>
     <authors>Thomas Galliker</authors>
     <licenseUrl>http://opensource.org/licenses/Apache-2.0</licenseUrl>
@@ -66,7 +66,6 @@
     <file src="..\WindowsPhone81CameraCaptureUI\bin\Release\CameraCaptureUI.xbf" target="lib\wpa81\CameraControls\CameraCaptureUI.xbf" />
     <file src="..\WindowsPhone81CameraCaptureUI\bin\Release\CameraCaptureUIPage.xbf" target="lib\wpa81\CameraControls\CameraCaptureUIPage.xbf" />
     <file src="..\WindowsPhone81CameraCaptureUI\bin\Release\Themes\Generic.xbf" target="lib\wpa81\CameraControls\Themes\Generic.xbf" />
-
 
     <!--Windows Store-->
     <file src="..\CrossPlatformLibrary.Camera.WindowsStore\Bin\Release\CrossPlatformLibrary.Camera.dll" target="lib\win81\CrossPlatformLibrary.Camera.dll" />
