@@ -10,36 +10,18 @@ namespace CrossPlatformLibrary.Camera
 {
     public class PhotoCamera : IPhotoCamera
     {
-        private readonly DeviceInformation deviceInformation;
-
         protected PhotoCamera(DeviceInformation deviceInformation)
         {
-            this.deviceInformation = deviceInformation;
+            this.CameraFacingDirection = deviceInformation.ToCameraFacingDirection();
+            this.IsEnabled = deviceInformation.IsEnabled;
+            this.Name = deviceInformation.Name;
         }
 
-        public CameraFacingDirection CameraFacingDirection
-        {
-            get
-            {
-                return this.deviceInformation.ToCameraFacingDirection();
-            }
-        }
+        public CameraFacingDirection CameraFacingDirection { get; }
 
-        public bool IsEnabled
-        {
-            get
-            {
-                return this.deviceInformation.IsEnabled;
-            }
-        }
+        public bool IsEnabled { get; }
 
-        public string Name
-        {
-            get
-            {
-                return this.deviceInformation.Name;
-            }
-        }
+        public string Name { get; }
 
         /// <inheritdoc />
         public async Task<MediaFile> TakePhotoAsync(StoreMediaOptions options)

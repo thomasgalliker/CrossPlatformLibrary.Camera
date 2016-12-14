@@ -118,11 +118,6 @@
     <Prefer32Bit>true</Prefer32Bit>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="..\CrossPlatformLibrary.Camera.WindowsStore\DeviceInformationExtensions.cs">
-      <Link>DeviceInformationExtensions.cs</Link>
-    </Compile>
-    <Compile Include="MediaAccess.cs" />
-    <Compile Include="MediaLibrary.cs" />
     <Compile Include="PhotoCamera.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="VideoCamera.cs" />
@@ -155,6 +150,7 @@
     <None Include="packages.config" />
   </ItemGroup>
   <Import Project="..\CrossPlatformLibrary.Camera.Shared\CrossPlatformLibrary.Camera.Shared.projitems" Label="Shared" />
+  <Import Project="..\CrossPlatformLibrary.Camera.WinRT\CrossPlatformLibrary.Camera.Shared.WinRT.projitems" Label="Shared" />
   <PropertyGroup Condition=" '$(VisualStudioVersion)' == '' or '$(VisualStudioVersion)' &lt; '12.0' ">
     <VisualStudioVersion>12.0</VisualStudioVersion>
   </PropertyGroup>

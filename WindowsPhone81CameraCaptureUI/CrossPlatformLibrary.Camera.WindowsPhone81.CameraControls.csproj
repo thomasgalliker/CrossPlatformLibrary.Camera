@@ -95,6 +95,9 @@
     </Page>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="..\CrossPlatformLibrary.Camera.Shared\CameraFacingDirection.cs">
+      <Link>CameraFacingDirection.cs</Link>
+    </Compile>
     <Compile Include="CameraCaptureUI.xaml.cs">
       <DependentUpon>CameraCaptureUI.xaml</DependentUpon>
     </Compile>
@@ -103,12 +106,6 @@
     </Compile>
     <Compile Include="PageOrientation.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\CrossPlatformLibrary.Camera\CrossPlatformLibrary.Camera.csproj">
-      <Project>{a6fcef44-d2ba-42c7-b3cb-13667bcd7b54}</Project>
-      <Name>CrossPlatformLibrary.Camera</Name>
-    </ProjectReference>
   </ItemGroup>
   <PropertyGroup Condition=" '$(VisualStudioVersion)' == '' or '$(VisualStudioVersion)' &lt; '12.0' ">
     <VisualStudioVersion>12.0</VisualStudioVersion>
