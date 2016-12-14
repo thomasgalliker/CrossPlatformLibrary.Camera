@@ -13,7 +13,7 @@ namespace CrossPlatformLibrary.Camera
         ///     Picks a photo from the default gallery
         /// </summary>
         /// <returns>Media file or null if canceled</returns>
-        Task<MediaFile> PickPhotoAsync();
+        Task<MediaFile> PickPhotoAsync(PickMediaOptions options = null);
 
         /// <summary>
         ///     Picks a video from the default gallery

@@ -1,13 +1,8 @@
 using System;
 using System.Threading.Tasks;
-
 using Android.Content;
-
-using Tracing;
-
 using Guards;
-
-
+using Tracing;
 using Environment = Android.OS.Environment;
 using File = Java.IO.File;
 using Uri = Android.Net.Uri;
@@ -27,6 +22,7 @@ namespace CrossPlatformLibrary.Camera
             this.context = Android.App.Application.Context;
         }
 
+        /// <inheritdoc />
         public async Task SaveToCameraRoll(MediaFile mediafile, bool overwrite = true)
         {
             string targetFilename = mediafile.Filename;
@@ -54,11 +50,13 @@ namespace CrossPlatformLibrary.Camera
             this.context.SendBroadcast(mediaScanIntent);    
         }
 
-        public Task<MediaFile> PickPhotoAsync()
+        /// <inheritdoc />
+        public Task<MediaFile> PickPhotoAsync(PickMediaOptions options = null)
         {
             throw new NotImplementedException();
         }
 
+        /// <inheritdoc />
         public Task<MediaFile> PickVideoAsync()
         {
             throw new NotImplementedException();

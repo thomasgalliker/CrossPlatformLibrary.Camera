@@ -9,7 +9,7 @@ namespace CrossPlatformLibrary.Camera
             throw new NotImplementedInReferenceAssemblyException();
         }
 
-        public Task<MediaFile> PickPhotoAsync()
+        public Task<MediaFile> PickPhotoAsync(PickMediaOptions options = null)
         {
             throw new NotImplementedInReferenceAssemblyException();
         }

@@ -2,8 +2,8 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
-using Tracing;
 using Guards;
+using Tracing;
 using Windows.Storage.Pickers;
 
 namespace CrossPlatformLibrary.Camera
@@ -43,7 +43,7 @@ namespace CrossPlatformLibrary.Camera
         }
 
         /// <inheritdoc />
-        public async Task<MediaFile> PickPhotoAsync()
+        public async Task<MediaFile> PickPhotoAsync(PickMediaOptions options = null)
         {
             var picker = new FileOpenPicker();
             picker.SuggestedStartLocation = PickerLocationId.PicturesLibrary;
