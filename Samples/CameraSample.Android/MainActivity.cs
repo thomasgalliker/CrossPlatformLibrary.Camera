@@ -3,8 +3,6 @@ using Android.App;
 using Android.Content.PM;
 using Android.OS;
 
-using CrossPlatformLibrary.Camera;
-
 using Xamarin.Forms;
 using Xamarin.Forms.Platform.Android;
 
@@ -16,8 +14,6 @@ namespace CameraSample.Droid
         protected override void OnCreate(Bundle bundle)
         {
             base.OnCreate(bundle);
-
-            var x = new MediaAccess();
 
             Forms.Init(this, bundle);
             this.LoadApplication(new App());

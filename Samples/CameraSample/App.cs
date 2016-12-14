@@ -13,7 +13,7 @@ namespace CameraSample
             this.bootstrapper = new Bootstrapper();
             this.bootstrapper.Startup();
 
-            this.MainPage = new NavigationPage(new CameraPage());
+            this.MainPage = new NavigationPage(new CameraPage()) { Title = "CrossPlatformLibrary.Camera" };
         }
 
         protected override void OnStart()
