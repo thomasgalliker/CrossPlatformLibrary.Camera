@@ -1,24 +1,26 @@
 ﻿using System;
 using System.IO;
 using System.Threading.Tasks;
-#if __UNIFIED__
+
 using CoreGraphics;
+
 using Foundation;
+
 using UIKit;
-using NSAction = global::System.Action;
-#else
-using MonoTouch.Foundation;
-using MonoTouch.UIKit;
 
-using CGRect = System.Drawing.RectangleF;
-using nfloat = System.Single;
-
-#endif
+using NSAction = System.Action;
 
 namespace CrossPlatformLibrary.Camera
 {
     internal class MediaPickerDelegate : UIImagePickerControllerDelegate
     {
+        private UIDeviceOrientation? orientation;
+        private readonly NSObject observer;
+        private readonly UIViewController viewController;
+        private readonly UIImagePickerControllerSourceType source;
+        private TaskCompletionSource<MediaFile> tcs = new TaskCompletionSource<MediaFile>();
+        private readonly StoreMediaOptions options;
+
         internal MediaPickerDelegate(UIViewController viewController, UIImagePickerControllerSourceType sourceType, StoreMediaOptions options)
         {
             this.viewController = viewController;
@@ -50,37 +52,48 @@ namespace CrossPlatformLibrary.Camera
             }
         }
 
-        public override void FinishedPickingMedia(UIImagePickerController picker, NSDictionary info)
+        public override async void FinishedPickingMedia(UIImagePickerController picker, NSDictionary info)
         {
+            this.RemoveOrientationChangeObserverAndNotifications();
+
             MediaFile mediaFile;
             switch ((NSString)info[UIImagePickerController.MediaType])
             {
-                case MediaAccess.TypeImage:
-                    mediaFile = this.GetPictureMediaFile(info);
+                case Constants.TypeImage:
+                    mediaFile = await this.GetPictureMediaFile(info);
                     break;
 
-                case MediaAccess.TypeMovie:
-                    mediaFile = this.GetMovieMediaFile(info);
+                case Constants.TypeMovie:
+                    mediaFile = await this.GetMovieMediaFile(info);
                     break;
 
                 default:
                     throw new NotSupportedException();
             }
 
-            this.Dismiss(picker, () => this.tcs.TrySetResult(mediaFile));
+            if (UIDevice.CurrentDevice.UserInterfaceIdiom == UIUserInterfaceIdiom.Phone)
+            {
+                UIApplication.SharedApplication.SetStatusBarStyle(Constants.StatusBarStyle, false);
+            }
+
+            this.Dismiss(picker, () => { this.tcs.TrySetResult(mediaFile); });
         }
 
         public override void Canceled(UIImagePickerController picker)
         {
-            this.Dismiss(picker, () => this.tcs.SetResult(null));
+            this.RemoveOrientationChangeObserverAndNotifications();
+
+            if (UIDevice.CurrentDevice.UserInterfaceIdiom == UIUserInterfaceIdiom.Phone)
+            {
+                UIApplication.SharedApplication.SetStatusBarStyle(Constants.StatusBarStyle, false);
+            }
+
+            this.Dismiss(picker, () => { this.tcs.SetResult(null); });
         }
 
         public void DisplayPopover(bool hideFirst = false)
         {
-            if (this.Popover == null)
-            {
-                return;
-            }
+            if (this.Popover == null) return;
 
             var swidth = UIScreen.MainScreen.Bounds.Width;
             var sheight = UIScreen.MainScreen.Bounds.Height;
@@ -101,7 +114,8 @@ namespace CrossPlatformLibrary.Camera
             }
 
             nfloat x, y;
-            if (this.orientation == UIDeviceOrientation.LandscapeLeft || this.orientation == UIDeviceOrientation.LandscapeRight)
+            if (this.orientation == UIDeviceOrientation.LandscapeLeft ||
+                this.orientation == UIDeviceOrientation.LandscapeRight)
             {
                 y = (swidth / 2) - (height / 2);
                 x = (sheight / 2) - (width / 2);
@@ -120,13 +134,6 @@ namespace CrossPlatformLibrary.Camera
             this.Popover.PresentFromRect(new CGRect(x, y, width, height), this.View, 0, animated: true);
         }
 
-        private UIDeviceOrientation? orientation;
-        private readonly NSObject observer;
-        private readonly UIViewController viewController;
-        private readonly UIImagePickerControllerSourceType source;
-        private readonly TaskCompletionSource<MediaFile> tcs = new TaskCompletionSource<MediaFile>();
-        private readonly StoreMediaOptions options;
-
         private bool IsCaptured
         {
             get
@@ -140,14 +147,10 @@ namespace CrossPlatformLibrary.Camera
             if (this.viewController == null)
             {
                 onDismiss();
+                this.tcs = new TaskCompletionSource<MediaFile>();
             }
             else
             {
-                NSNotificationCenter.DefaultCenter.RemoveObserver(this.observer);
-                UIDevice.CurrentDevice.EndGeneratingDeviceOrientationNotifications();
-
-                this.observer.Dispose();
-
                 if (this.Popover != null)
                 {
                     this.Popover.Dismiss(animated: true);
@@ -164,37 +167,32 @@ namespace CrossPlatformLibrary.Camera
             }
         }
 
+        private void RemoveOrientationChangeObserverAndNotifications()
+        {
+            if (this.viewController != null)
+            {
+                UIDevice.CurrentDevice.EndGeneratingDeviceOrientationNotifications();
+                NSNotificationCenter.DefaultCenter.RemoveObserver(this.observer);
+                this.observer.Dispose();
+            }
+        }
+
         private void DidRotate(NSNotification notice)
         {
             UIDevice device = (UIDevice)notice.Object;
-            if (!IsValidInterfaceOrientation(device.Orientation) || this.Popover == null)
-            {
-                return;
-            }
-            if (this.orientation.HasValue && IsSameOrientationKind(this.orientation.Value, device.Orientation))
-            {
-                return;
-            }
+            if (!IsValidInterfaceOrientation(device.Orientation) || this.Popover == null) return;
+            if (this.orientation.HasValue && IsSameOrientationKind(this.orientation.Value, device.Orientation)) return;
 
             if (UIDevice.CurrentDevice.CheckSystemVersion(6, 0))
             {
-                if (!this.GetShouldRotate6(device.Orientation))
-                {
-                    return;
-                }
+                if (!this.GetShouldRotate6(device.Orientation)) return;
             }
-            else if (!this.GetShouldRotate(device.Orientation))
-            {
-                return;
-            }
+            else if (!this.GetShouldRotate(device.Orientation)) return;
 
             UIDeviceOrientation? co = this.orientation;
             this.orientation = device.Orientation;
 
-            if (co == null)
-            {
-                return;
-            }
+            if (co == null) return;
 
             this.DisplayPopover(hideFirst: true);
         }
@@ -229,10 +227,7 @@ namespace CrossPlatformLibrary.Camera
 
         private bool GetShouldRotate6(UIDeviceOrientation orientation)
         {
-            if (!this.viewController.ShouldAutorotate())
-            {
-                return false;
-            }
+            if (!this.viewController.ShouldAutorotate()) return false;
 
             UIInterfaceOrientationMask mask = UIInterfaceOrientationMask.Portrait;
             switch (orientation)
@@ -260,7 +255,7 @@ namespace CrossPlatformLibrary.Camera
             return this.viewController.GetSupportedInterfaceOrientations().HasFlag(mask);
         }
 
-        private MediaFile GetPictureMediaFile(NSDictionary info)
+        private async Task<MediaFile> GetPictureMediaFile(NSDictionary info)
         {
             var image = (UIImage)info[UIImagePickerController.EditedImage];
             if (image == null)
@@ -268,14 +263,45 @@ namespace CrossPlatformLibrary.Camera
                 image = (UIImage)info[UIImagePickerController.OriginalImage];
             }
 
-            string path = GetOutputPath(MediaAccess.TypeImage, this.options.Directory ?? ((this.IsCaptured) ? String.Empty : "temp"), this.options.Name);
+            string path = GetOutputPath(Constants.TypeImage, this.options.Directory ?? ((this.IsCaptured) ? string.Empty : "temp"), this.options.Name);
 
-            using (FileStream fs = File.OpenWrite(path))
-            using (Stream s = new NSDataStream(image.AsJPEG()))
+            if (this.options.PhotoSize != PhotoSize.Full)
             {
-                s.CopyTo(fs);
-                fs.Flush();
+                try
+                {
+                    var percent = 1.0f;
+                    switch (this.options.PhotoSize)
+                    {
+                        case PhotoSize.Large:
+                            percent = .75f;
+                            break;
+                        case PhotoSize.Medium:
+                            percent = .5f;
+                            break;
+                        case PhotoSize.Small:
+                            percent = .25f;
+                            break;
+                        case PhotoSize.Custom:
+                            percent = (float)this.options.CustomPhotoSize / 100f;
+                            break;
+                    }
+
+                    //calculate new size
+                    var width = (image.CGImage.Width * percent);
+                    var height = (image.CGImage.Height * percent);
+
+                    //begin resizing image
+                    image = image.ResizeImageWithAspectRatio(width, height);
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Unable to compress image: {ex}");
+                }
             }
+
+            //iOS quality is 0.0-1.0
+            var quality = (this.options.CompressionQuality / 100f);
+            image.AsJPEG(quality).Save(path, true);
 
             Action<bool> dispose = null;
             if (this.source != UIImagePickerControllerSourceType.Camera)
@@ -286,11 +312,11 @@ namespace CrossPlatformLibrary.Camera
             return new MediaFile(path, () => File.OpenRead(path), dispose: dispose);
         }
 
-        private MediaFile GetMovieMediaFile(NSDictionary info)
+        private async Task<MediaFile> GetMovieMediaFile(NSDictionary info)
         {
             NSUrl url = (NSUrl)info[UIImagePickerController.MediaURL];
 
-            string path = GetOutputPath(MediaAccess.TypeMovie, this.options.Directory ?? ((this.IsCaptured) ? String.Empty : "temp"), this.options.Name ?? Path.GetFileName(url.Path));
+            string path = GetOutputPath(Constants.TypeMovie, this.options.Directory ?? ((this.IsCaptured) ? string.Empty : "temp"), this.options.Name ?? Path.GetFileName(url.Path));
 
             File.Move(url.Path, path);
 
@@ -305,21 +331,18 @@ namespace CrossPlatformLibrary.Camera
 
         private static string GetUniquePath(string type, string path, string name)
         {
-            bool isPhoto = (type == MediaAccess.TypeImage);
+            bool isPhoto = type == Constants.TypeImage;
             string ext = Path.GetExtension(name);
-            if (ext == String.Empty)
+            if (ext == string.Empty)
             {
-                ext = ((isPhoto) ? ".jpg" : ".mp4");
+                ext = isPhoto ? ".jpg" : ".mp4";
             }
 
             name = Path.GetFileNameWithoutExtension(name);
 
             string nname = name + ext;
             int i = 1;
-            while (File.Exists(Path.Combine(path, nname)))
-            {
-                nname = name + "_" + (i++) + ext;
-            }
+            while (File.Exists(Path.Combine(path, nname))) nname = name + "_" + (i++) + ext;
 
             return Path.Combine(path, nname);
         }
@@ -329,17 +352,11 @@ namespace CrossPlatformLibrary.Camera
             path = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Personal), path);
             Directory.CreateDirectory(path);
 
-            if (String.IsNullOrWhiteSpace(name))
+            if (string.IsNullOrWhiteSpace(name))
             {
                 string timestamp = DateTime.Now.ToString("yyyMMdd_HHmmss");
-                if (type == MediaAccess.TypeImage)
-                {
-                    name = "IMG_" + timestamp + ".jpg";
-                }
-                else
-                {
-                    name = "VID_" + timestamp + ".mp4";
-                }
+                if (type == Constants.TypeImage) name = "IMG_" + timestamp + ".jpg";
+                else name = "VID_" + timestamp + ".mp4";
             }
 
             return Path.Combine(path, GetUniquePath(type, path, name));
@@ -368,9 +385,9 @@ namespace CrossPlatformLibrary.Camera
             return false;
         }
 
-        private static UIDeviceOrientation GetDeviceOrientation(UIInterfaceOrientation self)
+        private static UIDeviceOrientation GetDeviceOrientation(UIInterfaceOrientation orientation)
         {
-            switch (self)
+            switch (orientation)
             {
                 case UIInterfaceOrientation.LandscapeLeft:
                     return UIDeviceOrientation.LandscapeLeft;
@@ -381,7 +398,7 @@ namespace CrossPlatformLibrary.Camera
                 case UIInterfaceOrientation.PortraitUpsideDown:
                     return UIDeviceOrientation.PortraitUpsideDown;
                 default:
-                    throw new InvalidOperationException();
+                    throw new NotSupportedException($"UIInterfaceOrientation.{orientation} is not supported.");
             }
         }
     }
